@@ -11,13 +11,19 @@ void function InitNorthstarCustomMatchSettingsCategoryMenu()
 	AddMenuFooterOption( GetMenu( "CustomMatchSettingsCategoryMenu" ), BUTTON_B, "#B_BUTTON_BACK", "#BACK" )
 	AddMenuFooterOption( GetMenu( "CustomMatchSettingsCategoryMenu" ), BUTTON_Y, "#Y_BUTTON_RESTORE_DEFAULTS", "#RESTORE_DEFAULTS", ResetMatchSettingsToDefault )
 
-	foreach ( var button in GetElementsByClassname( GetMenu( "CustomMatchSettingsCategoryMenu" ), "MatchSettingCategoryButton" ) )
+
+	array<var> buttons = GetElementsByClassname( GetMenu( "CustomMatchSettingsCategoryMenu" ), "MatchSettingCategoryButton" )
+
+	for ( int i = 1; i < buttons.len(); i++ )
 	{
-		AddButtonEventHandler( button, UIE_CLICK, SelectPrivateMatchSettingsCategory )
+		
+		AddButtonEventHandler( buttons[i], UIE_CLICK, SelectPrivateMatchSettingsCategory )
 	
-		Hud_SetEnabled( button, false )
-		Hud_SetVisible( button, false )
+		Hud_SetEnabled( buttons[i], false )
+		Hud_SetVisible( buttons[i], false )
 	}
+
+	AddButtonEventHandler( buttons[0], UIE_CLICK, OpenBanMenu )
 }
 
 void function OnNorthstarCustomMatchSettingsCategoryMenuOpened()
@@ -30,8 +36,12 @@ void function OnNorthstarCustomMatchSettingsCategoryMenuOpened()
 		Hud_SetEnabled( button, false )
 		Hud_SetVisible( button, false )
 	}
+
+	Hud_SetText( buttons[ 0 ], Localize("#BAN_PAGE" ) + " ->" )
+	Hud_SetEnabled( buttons[ 0 ], true )
+	Hud_SetVisible( buttons[ 0 ], true )
 	
-	for ( int i = 0, j = 0; j < categories.len() && i < buttons.len(); i++, j++ )
+	for ( int i = 1, j = 0; j < categories.len() && i < buttons.len(); i++, j++ )
 	{
 		Hud_SetText( buttons[ i ], Localize( categories[ j ] ) + " ->" )
 		Hud_SetEnabled( buttons[ i ], true )
@@ -41,11 +51,17 @@ void function OnNorthstarCustomMatchSettingsCategoryMenuOpened()
 
 void function SelectPrivateMatchSettingsCategory( var button )
 {
-	SetNextMatchSettingsCategory( GetPrivateMatchSettingCategories()[ int( Hud_GetScriptID( button ) ) ] )
+	SetNextMatchSettingsCategory( GetPrivateMatchSettingCategories()[ int( Hud_GetScriptID( button ) ) -1 ] )
 	AdvanceMenu( GetMenu( "CustomMatchSettingsMenu" ) )
 }
 
 void function ResetMatchSettingsToDefault( var button )
 {
 	ClientCommand( "ResetMatchSettingsToDefault" )
+}
+
+void function OpenBanMenu(var button) 
+{
+	print("--------------------------------------------- Click --------------------------------------")
+	AdvanceMenu( GetMenu( "ServerBrowserMenu" ) )
 }
