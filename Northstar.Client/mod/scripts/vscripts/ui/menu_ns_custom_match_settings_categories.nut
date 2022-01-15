@@ -62,6 +62,5 @@ void function ResetMatchSettingsToDefault( var button )
 
 void function OpenBanMenu(var button) 
 {
-	print("--------------------------------------------- Click --------------------------------------")
-	AdvanceMenu( GetMenu( "ServerBrowserMenu" ) )
+	AdvanceMenu( GetMenu( "CustomMatchBanSettingsMenu" ) )
 }

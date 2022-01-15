@@ -65,6 +65,14 @@
 			"UICallback": {
 				"Before": "AddNorthstarCustomMatchSettingsMenu"
 			}
+		},
+		{
+			"Path": "ui/menu_ns_custom_match_settings_ban.nut",
+			"RunOn": "UI",
+			"UICallback": {
+				"Before": "AddNorthstarCustomMatchSettingsBanMenu"
+			}
+
 		}
 	],
 	
