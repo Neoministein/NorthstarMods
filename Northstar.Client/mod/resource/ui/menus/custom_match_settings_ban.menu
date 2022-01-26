@@ -1,4 +1,4 @@
-#base "loadout_selection_buttons.res"
+
 resource/ui/menus/custom_match_settings_ban.menu
 {
 	menu
@@ -35,6 +35,129 @@ resource/ui/menus/custom_match_settings_ban.menu
 			ControlName				ImagePanel
 			InheritProperties		MenuTopBar
 		}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		ButtonRowAnchor
+		{
+			ControlName				Label
+			labelText				""
+            wide                    10
+            tall                    0
+			xpos                    132
+			ypos                    160
+		}
+
+		PilotButton
+    	{
+        	ControlName				RuiButton
+        	InheritProperties		RuiLoadoutSelectionButton
+			classname				BanSettingCategoryButton
+        	scriptID				0
+        	pin_to_sibling			ButtonRowAnchor
+        	pin_corner_to_sibling	TOP_LEFT
+        	pin_to_sibling_corner	BOTTOM_LEFT
+        	navUp					ButtonLast
+        	navDown					Button1
+        	visible					0
+        	//tabPosition             0
+    	}
+
+    	WeaponButton
+    	{
+        	ControlName				RuiButton
+        	InheritProperties		RuiLoadoutSelectionButton
+			classname				BanSettingCategoryButton
+        	ypos                    8
+        	scriptID				1
+        	pin_to_sibling			PilotButton
+       		pin_corner_to_sibling	TOP_LEFT
+        	pin_to_sibling_corner	BOTTOM_LEFT
+        	navUp					Button0
+        	navDown					Button2
+        	visible					0
+        	//tabPosition             1
+    	}
+
+    	TitanButton
+    	{
+        	ControlName				RuiButton
+        	InheritProperties		RuiLoadoutSelectionButton
+			classname				BanSettingCategoryButton
+        	ypos                    8
+        	scriptID				2
+        	pin_to_sibling			WeaponButton
+        	pin_corner_to_sibling	TOP_LEFT
+        	pin_to_sibling_corner	BOTTOM_LEFT
+        	navUp					Button1
+        	navDown					Button3
+        	visible					0
+        	//tabPosition             2
+    	}
+
+		BoostButton
+    	{
+        	ControlName				RuiButton
+        	InheritProperties		RuiLoadoutSelectionButton
+			classname				BanSettingCategoryButton
+        	ypos                    8
+        	scriptID				2
+        	pin_to_sibling			TitanButton
+        	pin_corner_to_sibling	TOP_LEFT
+        	pin_to_sibling_corner	BOTTOM_LEFT
+        	navUp					Button1
+        	navDown					Button3
+        	visible					0
+        	//tabPosition             2
+    	}
+
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		PilotLoadoutDisplay
+	    {
+		    ControlName				CNestedPanel
+			classname 				loadoutDisplay
+		    xpos					450
+    	    ypos                    76
+		    zpos					10
+			wide					1048
+			tall					1080
+		    visible					0
+		    enabled                 0
+		    controlSettingsFile		"resource/ui/menus/panels/ban_pilotloadout.res"
+	    }
+
+
+
+		WeaponCategoryDisplay
+	    {
+		    ControlName				CNestedPanel
+			classname 				loadoutDisplay
+		    xpos					450
+    	    ypos                    76
+		    zpos					10
+			wide					1048
+			tall					1080
+		    visible					0
+		    enabled                 0
+		    controlSettingsFile		"resource/ui/menus/panels/ban_weapon_category.res"
+	    }
+
+		TitanLoadoutDisplay
+	    {
+		    ControlName				CNestedPanel
+			classname 				loadoutDisplay
+		    xpos					450
+    	    ypos                    76
+		    zpos					10
+			wide					1048
+			tall					1080
+		    visible					0
+		    enabled                 0
+		    controlSettingsFile		"resource/ui/menus/panels/ban_titanloadout.res"
+	    }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
