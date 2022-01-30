@@ -264,7 +264,8 @@ void function RestoreHiddenSubmenuBackgroundElems()
 	array<string> classnames
 	classnames.append( "HideWhenEditing_0" )
 	classnames.append( "HideWhenEditing_1" )
-	classnames.append( "HideWhenEditing_2" )
+  classnames.append( "HideWhenEditing_2" )
+	
 
 	foreach ( classname in classnames )
 	{
@@ -273,6 +274,16 @@ void function RestoreHiddenSubmenuBackgroundElems()
 		foreach ( elem in elems )
 			Hud_Show( elem )
 	}
+  //This is here to not show the sights on weapon categories without sights
+  print(file.weapon.categorySelected)
+  if(file.weapon.categorySelected > 4) 
+  {
+    array<var> elems = GetElementsByClassname( file.menu , "HideWhenNoVisor" )
+	  foreach ( elem in elems )
+		  Hud_Hide( elem )
+  }
+
+  
 }
 
 void function selectButton(array<var> buttons, int current, int selected) {
@@ -331,8 +342,10 @@ void function changeWeaponDisplay( var pressedButton )
 
 void function loadWeaponCategory(WeaponCategory category) 
 {
+  print(category.displayName)
   for(int i = 0; i < file.weapon.weaponDisplays.len();i++) {
       if(i < category.weapons.len()) {
+        print(category.weapons[i].image)
         RuiSetImage( 
           Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" )), 
           "buttonImage", 
@@ -348,10 +361,19 @@ void function loadWeaponCategory(WeaponCategory category)
           "buttonImage", 
           category.weapons[i].mod1.images[category.weapons[i].selectedMod1] )     
 
-        RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" )), 
-          "buttonImage", 
-          category.weapons[i].visor.images[category.weapons[i].selectedVisor] )       
+        if (category.weapons[i].visor.images.len() > 0) {
+          RuiSetImage( 
+            Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" )), 
+            "buttonImage", 
+            category.weapons[i].visor.images[category.weapons[i].selectedVisor] )  
+
+            Hud_SetVisible( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" ) , true )    
+        } 
+        else 
+        {
+          Hud_SetVisible( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" ) , false )
+        }
+
 
         Hud_SetVisible( file.weapon.weaponDisplays[i] , true )
       } else {
@@ -501,31 +523,351 @@ void function initWeapon()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory smg
   smg.displayName = "#MENU_TITLE_SMG"
+
+  ArrayAttribute smgVisor
+  smgVisor.images = [
+    $"rui/menu/common/unlock_random",
+    $"r2_ui/menus/loadout_icons/attachments/iron_sights",
+    $"r2_ui/menus/loadout_icons/attachments/hcog_ranger",
+    $"r2_ui/menus/loadout_icons/attachments/holosight" ,
+    $"r2_ui/menus/loadout_icons/attachments/threat_scope"]
+  smgVisor.values = [
+    "undefined",
+    "iron_sights",
+    "hcog_ranger",
+    "holosight",
+    "threat_scope"]
+
+  smg.weapons.append(createWeapon(
+    "car",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_car",
+    defaultMod,
+    defaultMod,
+    smgVisor))  
+
+  smg.weapons.append(createWeapon(
+    "alternator",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_alternator",
+    defaultMod,
+    defaultMod,
+    arVisor))
+
+  smg.weapons.append(createWeapon(
+    "volt",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_volt",
+    defaultMod,
+    defaultMod,
+    smgVisor))     
+
+  smg.weapons.append(createWeapon(
+    "r97",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_r97n",
+    defaultMod,
+    defaultMod,
+    smgVisor))       
+
   weapon.categories.append(smg)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory lmg
   lmg.displayName = "#MENU_TITLE_LMG"
+
+  ArrayAttribute lmgVisor
+  lmgVisor.images = [
+    $"rui/menu/common/unlock_random",
+    $"r2_ui/menus/loadout_icons/attachments/iron_sights",
+    $"r2_ui/menus/loadout_icons/attachments/hcog_ranger",
+    $"r2_ui/menus/loadout_icons/attachments/aog",
+    $"r2_ui/menus/loadout_icons/attachments/threat_scope"]
+  lmgVisor.values = [
+    "undefined",
+    "iron_sights",
+    "hcog_ranger",
+    "aog",
+    "threat_scope"]
+
+  lmg.weapons.append(createWeapon(
+    "spitfire",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_spitfire",
+    defaultMod,
+    defaultMod,
+    lmgVisor))   
+
+  lmg.weapons.append(createWeapon(
+    "lstar",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_lstar",
+    defaultMod,
+    defaultMod,
+    lmgVisor))  
+
+  lmg.weapons.append(createWeapon(
+    "devotion",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_esaw",
+    defaultMod,
+    defaultMod,
+    lmgVisor))      
+
   weapon.categories.append(lmg)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory sniper
   sniper.displayName = "#MENU_TITLE_SNIPER"
+
+  ArrayAttribute sniperViser
+  sniperViser.images = [
+    $"rui/menu/common/unlock_random",
+    $"r2_ui/menus/loadout_icons/attachments/iron_sights",
+    $"r2_ui/menus/loadout_icons/attachments/variable_zoom",
+    $"r2_ui/menus/loadout_icons/attachments/threat_scope",]
+  sniperViser.values = [
+    "undefined",
+    "iron_sights",
+    "variable_zoom",
+    "threat_scope",]
+
+  ArrayAttribute sniperModOne
+  sniperModOne.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"rui/pilot_loadout/kit/speed_loader",
+    $"rui/pilot_loadout/mods/gun_ready",
+    $"rui/pilot_loadout/mods/speed_transition",
+    $"rui/pilot_loadout/mods/tactikill",
+    $"rui/pilot_loadout/mods/ricochet",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  sniperModOne.values = [
+    "undefined",
+    "extended_ammo",
+    "speed_loader",
+    "gun_ready",
+    "speed_transition",
+    "tactikill",
+    "ricochet",
+    "none"]
+
+  ArrayAttribute sniperModTwo
+  sniperModTwo.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"rui/pilot_loadout/kit/speed_loader",
+    $"rui/pilot_loadout/mods/gun_ready",
+    $"rui/pilot_loadout/mods/speed_transition",
+    $"rui/pilot_loadout/mods/tactikill",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  sniperModTwo.values = [
+    "undefined",
+    "extended_ammo",
+    "speed_loader",
+    "gun_ready",
+    "speed_transition",
+    "tactikill",
+    "none"]    
+
+  sniper.weapons.append(createWeapon(
+    "kraber",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_kraber",
+    sniperModOne,
+    sniperModOne,
+    sniperViser))   
+
+  sniper.weapons.append(createWeapon(
+    "doubletake",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_doubletake",
+    sniperModOne,
+    sniperModOne,
+    sniperViser))
+
+  sniper.weapons.append(createWeapon(
+    "dmr",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_longbow",
+    sniperModTwo,
+    sniperModTwo,
+    sniperViser)) 
+  //Sniper don't have run and gun
   weapon.categories.append(sniper)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory shotgun
   shotgun.displayName = "#MENU_TITLE_SHOTGUN"
+
+  shotgun.weapons.append(createWeapon(
+    "eva",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_eva8",
+    defaultMod,
+    defaultMod,
+    smgVisor)) 
+
+  shotgun.weapons.append(createWeapon(
+    "mastiff",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_mastiff",
+    defaultMod,
+    defaultMod,
+    smgVisor)) 
+  
   weapon.categories.append(shotgun)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory grenadier
   grenadier.displayName = "#MENU_TITLE_GRENADIER"
+
+  grenadier.weapons.append(createWeaponNoVisor(
+    "smr",
+    $"r2_ui/menus/loadout_icons/anti_titan/at_sidewinder",
+    defaultMod,
+    defaultMod)) 
+
+  grenadier.weapons.append(createWeaponNoVisor(
+    "epg",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_epg1",
+    defaultMod,
+    defaultMod)) 
+
+  grenadier.weapons.append(createWeaponNoVisor(
+    "softball",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_softball",
+    defaultMod,
+    defaultMod)) 
+
+  grenadier.weapons.append(createWeaponNoVisor(
+    "coldwar",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_coldwar",
+    defaultMod,
+    defaultMod)) 
+
   weapon.categories.append(grenadier)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory handgun
   handgun.displayName = "#MENU_TITLE_HANDGUN"
+
+  ArrayAttribute handgunMod
+  handgunMod.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"r2_ui/menus/loadout_icons/attachments/suppressor",
+    $"rui/pilot_loadout/mods/gunrunner",
+    $"rui/pilot_loadout/kit/speed_loader",
+    $"rui/pilot_loadout/mods/gun_ready",
+    $"rui/pilot_loadout/mods/tactikill",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  handgunMod.values = [
+    "undefined",
+    "extended_ammo",
+    "suppressor",
+    "gunrunner",
+    "speed_loader",
+    "gun_ready",
+    "tactikill",
+    "none"]
+
+  ArrayAttribute wingmanMod
+  wingmanMod.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"rui/pilot_loadout/mods/ricochet",
+    $"rui/pilot_loadout/mods/gunrunner",
+    $"rui/pilot_loadout/kit/speed_loader",
+    $"rui/pilot_loadout/mods/gun_ready",
+    $"rui/pilot_loadout/mods/tactikill",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  wingmanMod.values = [
+    "undefined",
+    "extended_ammo",
+    "ricochet",
+    "gunrunner",
+    "speed_loader",
+    "gun_ready",
+    "tactikill",
+    "none"]
+
+  handgun.weapons.append(createWeaponNoVisor(
+    "wingman_elite",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_wingman_elite",
+    wingmanMod,
+    wingmanMod)) 
+
+  handgun.weapons.append(createWeaponNoVisor(
+    "mozambique",
+    $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_mozambique",
+    handgunMod,
+    handgunMod)) 
+
+  handgun.weapons.append(createWeaponNoVisor(
+    "re45",
+    $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_autopistol",
+    handgunMod,
+    handgunMod)) 
+
+  handgun.weapons.append(createWeaponNoVisor(
+    "p2016",
+    $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_hammondp2011",
+    handgunMod,
+    handgunMod)) 
+
+  handgun.weapons.append(createWeaponNoVisor(
+    "b3",
+    $"r2_ui/menus/loadout_icons/primary_weapon/primary_wingman_m",
+    handgunMod,
+    handgunMod))  
+
   weapon.categories.append(handgun)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   WeaponCategory antiTitan
   antiTitan.displayName = "#MENU_TITLE_ANTI_TITAN"
-  weapon.categories.append(antiTitan)
+
+  ArrayAttribute antiTitanMod
+  antiTitanMod.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"rui/pilot_loadout/mods/gunrunner",
+    $"rui/pilot_loadout/kit/speed_loader",
+    $"rui/pilot_loadout/mods/speed_transition",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  antiTitanMod.values = [
+    "undefined",
+    "extended_ammo",
+    "speed_loader",
+    "gun_ready",
+    "speed_transition",
+    "none"]
+
+  ArrayAttribute chargerifleMod
+  chargerifleMod.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/pilot_loadout/mods/extended_ammo",
+    $"rui/pilot_loadout/mods/charge_hack",
+    $"rui/pilot_loadout/mods/gun_ready",
+    $"rui/pilot_loadout/mods/speed_transition",
+    $"ui/menu/items/mod_icons/stabilizer"]
+  chargerifleMod.values = [
+    "undefined",
+    "extended_ammo",
+    "charge_hack",
+    "speed_loader",
+    "gun_ready",
+    "none"]
+
+  antiTitan.weapons.append(createWeaponNoVisor(
+    "chargerifle",
+    $"r2_ui/menus/loadout_icons/anti_titan/at_defenderc",
+    chargerifleMod,
+    chargerifleMod)) 
+
+  antiTitan.weapons.append(createWeaponNoVisor(
+    "mgl",
+    $"r2_ui/menus/loadout_icons/anti_titan/at_mgl",
+    antiTitanMod,
+    antiTitanMod))  
+
+  antiTitan.weapons.append(createWeaponNoVisor(
+    "thunderbolt",
+    $"r2_ui/menus/loadout_icons/anti_titan/at_arcball",
+    antiTitanMod,
+    antiTitanMod)) 
+
+  antiTitan.weapons.append(createWeaponNoVisor(
+    "archer",
+    $"r2_ui/menus/loadout_icons/anti_titan/at_archer",
+    antiTitanMod,
+    antiTitanMod))   
+
+  weapon.categories.append(antiTitan)      
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   for(int i = 0; i < weapon.buttons.len() ; i++) 
   {
@@ -539,7 +881,7 @@ void function initWeapon()
     AddButtonEventHandler( weaponButton[i], UIE_CLICK, callWeaponButtonClick )
   }  
   
-  array<var> modTypeButtons = GetElementsByClassname( file.menu, "OpenWeaponMod" )
+  array<var> modTypeButtons = GetElementsByClassname( file.menu, "HideWhenEditing_0" )
 
   for(int i = 0; i < modTypeButtons.len(); i++) {
     AddButtonEventHandler( modTypeButtons[i], UIE_CLICK, clickOpenWeaponMod )
@@ -553,6 +895,24 @@ void function initWeapon()
 
 Weapon function createWeapon(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1, ArrayAttribute visor) 
 {
+  Weapon weapon
+  weapon.image = image
+  weapon.disabled = false
+  weapon.selectedMod0 = 0
+  weapon.selectedMod1 = 0
+  weapon.selectedVisor = 0
+  weapon.name = name
+  weapon.mod0 = mod0
+  weapon.mod1 = mod1
+  weapon.visor = visor
+
+  return weapon
+}
+
+Weapon function createWeaponNoVisor(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1) 
+{
+  ArrayAttribute visor 
+
   Weapon weapon
   weapon.image = image
   weapon.disabled = false
