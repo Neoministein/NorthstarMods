@@ -125,7 +125,7 @@
     	    ypos                    0
 		    zpos					10
 			wide					1048
-			tall					150
+			tall					225
 
 			scriptID				0
 		    visible					1
@@ -141,7 +141,7 @@
     	    ypos                    150
 		    zpos					10
 			wide					1048
-			tall					150
+			tall					225
 
 			scriptID				1
 		    visible					1
@@ -157,7 +157,7 @@
     	    ypos                    300
 		    zpos					10
 			wide					1048
-			tall					150
+			tall					225
 
 			scriptID				2
 		    visible					1
@@ -173,7 +173,7 @@
     	    ypos                    450
 		    zpos					10
 			wide					1048
-			tall					150
+			tall					225
 
 			scriptID				3
 		    visible					1
@@ -189,7 +189,7 @@
     	    ypos                    600
 		    zpos					10
 			wide					1048
-			tall					150
+			tall					225
 
 			scriptID				4
 		    visible					1
