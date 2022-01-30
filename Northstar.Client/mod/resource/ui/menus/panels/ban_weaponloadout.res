@@ -85,7 +85,6 @@
     ModDisplay
 	{
 		 ControlName				CNestedPanel
-		 classname 				loadoutDisplay
 		 xpos					450
     	 ypos                    0
 		 zpos					10
