@@ -31,7 +31,7 @@
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
-        classname				"OpenWeaponMod HideWhenEditing_0"
+        classname				"HideWhenEditing_0"
         scriptID				0
         xpos					6
 
@@ -49,7 +49,7 @@
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
-        classname				"OpenWeaponMod HideWhenEditing_0 HideWhenEditing_1"
+        classname				"HideWhenEditing_0 HideWhenEditing_1"
         scriptID				1
         xpos					6
 
@@ -67,7 +67,7 @@
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
-        classname				"OpenWeaponMod HideWhenEditing_0 HideWhenEditing_1 HideWhenEditing_2"
+        classname				"HideWhenEditing_0 HideWhenEditing_1 HideWhenEditing_2 HideWhenNoVisor"
         scriptID				2
         xpos					6
 
