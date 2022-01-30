@@ -86,11 +86,11 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
   file.buttons = GetElementsByClassname( file.menu, "BanSettingCategoryButton" )
   RHud_SetText( file.buttons[0], "#MODE_SETTING_BAN_PILOT" )
   RHud_SetText( file.buttons[1], "#MODE_SETTING_BAN_WEAPON" )
-  RHud_SetText( file.buttons[2], "#MODE_SETTING__BAN_TITAN" )
+  RHud_SetText( file.buttons[2], "#MODE_SETTING_BAN_TITAN" )
   RHud_SetText( file.buttons[3], "#MODE_SETTING_BAN_BOOST" )
 
-  selectButton(file.buttons, 1, 0)
-  selectDisplay(file.loadoutDisplays, 1, 0)
+  selectButton(file.buttons, 2, 0)
+  selectDisplay(file.loadoutDisplays, 2, 0)
   
   foreach (var button in file.buttons ) 
   {
@@ -275,7 +275,6 @@ void function RestoreHiddenSubmenuBackgroundElems()
 			Hud_Show( elem )
 	}
   //This is here to not show the sights on weapon categories without sights
-  print(file.weapon.categorySelected)
   if(file.weapon.categorySelected > 4) 
   {
     array<var> elems = GetElementsByClassname( file.menu , "HideWhenNoVisor" )
@@ -342,10 +341,8 @@ void function changeWeaponDisplay( var pressedButton )
 
 void function loadWeaponCategory(WeaponCategory category) 
 {
-  print(category.displayName)
   for(int i = 0; i < file.weapon.weaponDisplays.len();i++) {
       if(i < category.weapons.len()) {
-        print(category.weapons[i].image)
         RuiSetImage( 
           Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" )), 
           "buttonImage", 
@@ -443,7 +440,7 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/gun_ready",
     $"rui/pilot_loadout/mods/speed_transition",
     $"rui/pilot_loadout/mods/tactikill",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   defaultMod.values = [
     "undefined",
     "extended_ammo",
@@ -632,7 +629,7 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/speed_transition",
     $"rui/pilot_loadout/mods/tactikill",
     $"rui/pilot_loadout/mods/ricochet",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   sniperModOne.values = [
     "undefined",
     "extended_ammo",
@@ -651,7 +648,7 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/gun_ready",
     $"rui/pilot_loadout/mods/speed_transition",
     $"rui/pilot_loadout/mods/tactikill",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   sniperModTwo.values = [
     "undefined",
     "extended_ammo",
@@ -744,7 +741,7 @@ void function initWeapon()
     $"rui/pilot_loadout/kit/speed_loader",
     $"rui/pilot_loadout/mods/gun_ready",
     $"rui/pilot_loadout/mods/tactikill",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   handgunMod.values = [
     "undefined",
     "extended_ammo",
@@ -764,7 +761,7 @@ void function initWeapon()
     $"rui/pilot_loadout/kit/speed_loader",
     $"rui/pilot_loadout/mods/gun_ready",
     $"rui/pilot_loadout/mods/tactikill",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   wingmanMod.values = [
     "undefined",
     "extended_ammo",
@@ -817,7 +814,7 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/gunrunner",
     $"rui/pilot_loadout/kit/speed_loader",
     $"rui/pilot_loadout/mods/speed_transition",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   antiTitanMod.values = [
     "undefined",
     "extended_ammo",
@@ -833,7 +830,7 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/charge_hack",
     $"rui/pilot_loadout/mods/gun_ready",
     $"rui/pilot_loadout/mods/speed_transition",
-    $"ui/menu/items/mod_icons/stabilizer"]
+    $"ui/menu/items/mod_icons/none"]
   chargerifleMod.values = [
     "undefined",
     "extended_ammo",
@@ -930,4 +927,7 @@ Weapon function createWeaponNoVisor(string name, asset image, ArrayAttribute mod
 void function initTitan() 
 {
   file.titan.loadoutDisplay = file.loadoutDisplays[2]
+
+  var lableOne = Hud_GetChild( file.titan.loadoutDisplay, "TitanName" )
+  SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_TITAN") )
 }
