@@ -101,7 +101,7 @@ resource/ui/menus/custom_match_settings_ban.menu
         	InheritProperties		RuiLoadoutSelectionButton
 			classname				BanSettingCategoryButton
         	ypos                    8
-        	scriptID				2
+        	scriptID				3
         	pin_to_sibling			TitanButton
         	pin_corner_to_sibling	TOP_LEFT
         	pin_to_sibling_corner	BOTTOM_LEFT
@@ -152,11 +152,25 @@ resource/ui/menus/custom_match_settings_ban.menu
 		    xpos					450
     	    ypos                    76
 		    zpos					10
-			wide					1048
+			wide					1200
 			tall					1080
 		    visible					0
 		    enabled                 0
 		    controlSettingsFile		"resource/ui/menus/panels/ban_titanloadout.res"
+	    }
+
+		BoostLoadoutDisplay
+	    {
+		    ControlName				CNestedPanel
+			classname 				loadoutDisplay
+		    xpos					450
+    	    ypos                    76
+		    zpos					10
+			wide					1048
+			tall					1080
+		    visible					0
+		    enabled                 0
+		    controlSettingsFile		"resource/ui/menus/panels/ban_boostloadout.res"
 	    }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

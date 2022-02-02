@@ -2,8 +2,12 @@ global function AddNorthstarCustomMatchSettingsBanMenu
 
 struct BoolAttributte {
   bool disabeled = false
-  var button
   asset image
+}
+
+struct ArrayAttribute {
+    array<asset> images
+    array<string> values
 }
 
 struct PilotDisplay {
@@ -11,11 +15,6 @@ struct PilotDisplay {
 
   table<string ,BoolAttributte> attributes 
 } 
-
-struct ArrayAttribute {
-    array<asset> images
-    array<string> values
-}
 
 struct Weapon {
     string name
@@ -72,6 +71,13 @@ struct TitanDisplay {
   array<var> titanDisplays 
 } 
 
+struct BoostDisplay {
+  var loadoutDisplay
+
+  table<string ,BoolAttributte> boosts 
+} 
+
+
 struct {
   var menu
   var subMenu
@@ -83,6 +89,7 @@ struct {
   PilotDisplay pilot
   WeaponDisplay weapon
   TitanDisplay titan
+  BoostDisplay boost
 } file
 
 void function AddNorthstarCustomMatchSettingsBanMenu()
@@ -102,6 +109,7 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
   initPilot()
   initWeapon()
   initTitan()
+  initBoost()
 
   file.buttons = GetElementsByClassname( file.menu, "BanSettingCategoryButton" )
   RHud_SetText( file.buttons[0], "#MODE_SETTING_BAN_PILOT" )
@@ -373,7 +381,13 @@ void function callChangeMainDisplay( var pressedButton )
 void function callPilotButtonClick(var pressedButton) 
 {
   BoolAttributte attribute = file.pilot.attributes[Hud_GetScriptID( pressedButton )];
-  switchBoolAttribute(attribute)
+  switchBoolAttribute(pressedButton ,attribute)
+}
+
+void function callBoostClick(var pressedButton) 
+{
+  BoolAttributte attribute = file.boost.boosts[Hud_GetScriptID( pressedButton )];
+  switchBoolAttribute(pressedButton, attribute)
 }
 
 void function callWeaponButtonClick(var pressedButton) 
@@ -386,10 +400,10 @@ void function callWeaponButtonClick(var pressedButton)
   file.weapon.categories[file.weapon.categorySelected].weapons[weaponId].disabled = state
 }
 
-void function switchBoolAttribute(BoolAttributte attribute)
+void function switchBoolAttribute(var button, BoolAttributte attribute)
 {
   attribute.disabeled = !attribute.disabeled
-  Hud_SetSelected( attribute.button , attribute.disabeled )
+  Hud_SetSelected( button , attribute.disabeled )
 }
 
 void function changeWeaponDisplay( var pressedButton )
@@ -473,6 +487,36 @@ void function reloadTitanScreen() {
   }
 }
 
+void function reloadBoostScreen() {
+  for(int i = 0; i < file.titan.titanDisplays.len();i++) {
+    RuiSetImage( 
+      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
+      "buttonImage", 
+      file.titan.titans[i].image )
+
+    RuiSetImage( 
+      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame")),
+     "basicImage", 
+     file.titan.titans[i].image )  
+
+    RuiSetImage( 
+      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod0" )), 
+      "buttonImage", 
+      file.titan.titans[i].kit0.images[file.titan.titans[i].selectedKit0] )
+
+    RuiSetImage( 
+      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
+      "buttonImage", 
+      file.titan.titans[i].kit1.images[file.titan.titans[i].selectedKit1] )     
+
+
+    RuiSetImage( 
+      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
+      "buttonImage", 
+      file.titan.titans[i].kit2.images[file.titan.titans[i].selectedKit2] )  
+  }
+}
+
 void function initPilot() 
 {
   PilotDisplay pilot = file.pilot
@@ -502,7 +546,6 @@ void function initPilot()
   foreach(var button in GetElementsByClassname( file.menu, "PilotLoadoutPanelButtonClass" ))
   {
     string buttonId = Hud_GetScriptID( button )
-    pilot.attributes[buttonId].button = button
 
     RuiSetImage( Hud_GetRui( button  ), "buttonImage",  pilot.attributes[buttonId].image)
     AddButtonEventHandler( button, UIE_CLICK, callPilotButtonClick )
@@ -1325,4 +1368,35 @@ void function initTitan()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
   reloadTitanScreen()
+}
+
+void function initBoost() 
+{
+  BoostDisplay boost = file.boost
+
+  boost.loadoutDisplay = file.loadoutDisplays[3]
+
+  var lableOne = Hud_GetChild( file.boost.loadoutDisplay, "BoostName" )
+  SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_BOOST") )
+
+  boost.boosts["amped_weapons"]         <- createBoolAttributte($"rui/menu/boosts/boost_amped_weapons")
+  boost.boosts["ticks"]                 <- createBoolAttributte($"rui/menu/boosts/boost_ticks")
+  boost.boosts["antipersonnel_sentry"]  <- createBoolAttributte($"rui/menu/boosts/boost_antipersonnel_sentry")
+  boost.boosts["map_hack"]              <- createBoolAttributte($"rui/menu/boosts/boost_map_hack")
+  boost.boosts["battery"]               <- createBoolAttributte($"rui/menu/boosts/boost_battery")
+  boost.boosts["radar_jammer"]          <- createBoolAttributte($"rui/menu/boosts/boost_radar_jammer")
+  boost.boosts["antititan_sentry"]      <- createBoolAttributte($"rui/menu/boosts/boost_antititan_sentry")
+  boost.boosts["smart_pistol"]          <- createBoolAttributte($"rui/menu/boosts/boost_smart_pistol")
+  boost.boosts["phase_rewind"]          <- createBoolAttributte($"rui/menu/boosts/boost_phase_rewind")
+  boost.boosts["shield"]                <- createBoolAttributte($"rui/menu/boosts/boost_shield")
+  boost.boosts["holo_pilots"]           <- createBoolAttributte($"rui/menu/boosts/boost_holo_pilots")
+  boost.boosts["random"]                <- createBoolAttributte($"rui/menu/boosts/boost_random")
+
+  foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
+  {
+    string buttonId = Hud_GetScriptID( button )
+
+    RuiSetImage( Hud_GetRui( button  ), "buttonImage",  boost.boosts[buttonId].image)
+    AddButtonEventHandler( button, UIE_CLICK, callBoostClick )
+  }
 }

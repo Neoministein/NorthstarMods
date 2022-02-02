@@ -1,18 +1,18 @@
 "resource/ui/menus/panels/ban_boostloadout.res"
 {
-	TacticalName
+    BoostName
 	{
         ControlName				RuiPanel
         InheritProperties       RuiLoadoutLabel
         ypos                    78
 	}
 
-    ButtonSuit
+	ButtonAmpedWeapons
     {
 		ControlName				RuiButton
 		InheritProperties		SuitButton
-        classname				A
-        scriptID				"suit"
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"amped_weapons"
         tabPosition				1
 
         navUp					RenameEditBox
@@ -20,542 +20,214 @@
         navLeft                 ButtonGender
         navRight                ButtonOrdnance
 
-        pin_to_sibling			TacticalName
+        pin_to_sibling			BoostName
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-//	TacticalBind
-//	{
-//        ControlName				RuiPanel
-//        InheritProperties       RuiBindLabel
-//        xpos                    -6
-//        ypos                    -6
-//
-//        pin_to_sibling			ButtonSuit
-//        pin_corner_to_sibling	BOTTOM_LEFT
-//        pin_to_sibling_corner	BOTTOM_LEFT
-//	}
-
-    OrdnanceName
-    {
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        xpos					-230
-
-        pin_to_sibling			TacticalName
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-    ButtonOrdnance
+    ButtonTick
     {
 		ControlName				RuiButton
-		InheritProperties		LoadoutButtonMedium
-        classname				A
-        scriptID				"ordnance"
-        xpos					6
+		InheritProperties		SuitButton
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"ticks"
+        xpos					-235
 
         navUp					RenameEditBox
         navDown					ButtonPrimary
-        navLeft 				ButtonSuit
-        navRight                ButtonPilotCamo
+        navLeft                 ButtonGender
+        navRight                ButtonOrdnance
 
-        pin_to_sibling			ButtonSuit
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-//	OrdnanceBind
-//	{
-//        ControlName				RuiPanel
-//        InheritProperties       RuiBindLabel
-//        xpos                    -6
-//        ypos                    -6
-//
-//        pin_to_sibling			ButtonOrdnance
-//        pin_corner_to_sibling	BOTTOM_LEFT
-//        pin_to_sibling_corner	BOTTOM_LEFT
-//	}
-
-    ButtonPilotCamo
-    {
-		ControlName				RuiButton
-		InheritProperties		CosmeticButton
-        xpos					-560
-
-        navUp					RenameEditBox
-        navDown					ButtonPrimarySkin
-        navLeft                 ButtonOrdnance
-        navRight                ButtonGender
-
-        pin_to_sibling			ButtonSuit
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-    ButtonGender
-    {
-		ControlName				RuiButton
-		InheritProperties		CosmeticButton
-		classname               A
-		scriptID                "race"
-
-        navUp					RenameEditBox
-        navDown					ButtonPrimarySkin
-        navLeft                 ButtonPilotCamo
-        navRight                ButtonSuit
-
-        xpos                    6
-
-        pin_to_sibling			ButtonPilotCamo
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    PrimaryName
-    {
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        ypos					17
-
-        pin_to_sibling			ButtonSuit
+        pin_to_sibling			BoostName
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ButtonPrimary
+    ButtonSentry
     {
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
-        classname				A
-        scriptID				"primary"
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"antipersonnel_sentry"
+        ypos					10
 
         navUp					ButtonSuit
         navDown					ButtonSecondary
         navLeft 				ButtonPrimarySkin
         navRight 				ButtonPrimaryMod1
 
-        pin_to_sibling			PrimaryName
+        pin_to_sibling			ButtonAmpedWeapons
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-    ButtonPrimaryMod1
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_primaryMod1"
-        scriptID				"primaryMod1"
-        xpos					6
-
-        navUp					ButtonSuit
-        navDown                 ButtonSecondary
-        navLeft 				ButtonPrimary
-        navRight 				ButtonPrimaryMod2
-
-        pin_to_sibling			ButtonPrimary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonPrimaryMod2
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_primaryMod1 HideWhenEditing_primaryMod2"
-        scriptID				"primaryMod2"
-        xpos					6
-
-        navUp					ButtonSuit
-        navDown                 ButtonSecondary
-        navLeft 				ButtonPrimaryMod1
-        navRight 				ButtonPrimarySight
-
-        pin_to_sibling			ButtonPrimaryMod1
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonPrimarySight
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_primaryMod1 HideWhenEditing_primaryMod2 HideWhenEditing_primaryAttachment"
-        scriptID				"primaryAttachment"
-        xpos					6
-
-        navUp                   ButtonSuit
-        navDown					ButtonSecondary
-        navLeft 				ButtonPrimaryMod2
-        navRight 				ButtonPrimaryMod3
-
-        pin_to_sibling			ButtonPrimaryMod2
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonPrimaryMod3
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_primaryMod1 HideWhenEditing_primaryMod2 HideWhenEditing_primaryAttachment"
-        scriptID				"primaryMod3"
-        xpos					6
-
-        navUp                   ButtonSuit
-        navDown					ButtonSecondary
-        navLeft 				ButtonPrimarySight
-        navRight 				ButtonPrimarySkin
-
-        pin_to_sibling			ButtonPrimarySight
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonPrimarySkin
-    {
-		ControlName				RuiButton
-		InheritProperties		CosmeticButton
-		classname               "HideWhenEditing_primaryMod2"
-        scriptID				"primaryCamoIndex"
-        xpos					-560
-
-        navUp					ButtonPilotCamo
-        navDown					ButtonSecondarySkin
-        navLeft                 ButtonPrimaryMod3
-        navRight                ButtonPrimary
-
-        pin_to_sibling			ButtonPrimary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-//    PrimaryBind
-//    {
-//        ControlName				RuiPanel
-//        InheritProperties       RuiBindLabel
-//        xpos					6
-//        ypos                    -5
-//
-//        pin_to_sibling			ButtonPrimary
-//        pin_corner_to_sibling	BOTTOM_LEFT
-//        pin_to_sibling_corner	BOTTOM_RIGHT
-//    }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	SecondaryName
-	{
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        ypos					17
-
-        pin_to_sibling			ButtonPrimary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-    }
-
-    ButtonSecondary
+    ButtonMapHack
     {
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
-        classname				A
-        scriptID				"secondary"
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"map_hack"
+        ypos					10
+
+        navUp					ButtonSuit
+        navDown					ButtonSecondary
+        navLeft 				ButtonPrimarySkin
+        navRight 				ButtonPrimaryMod1
+
+        pin_to_sibling			ButtonTick
+        pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ButtonBattery
+    {
+		ControlName				RuiButton
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"battery"
+        ypos					10
 
         navUp					ButtonPrimary
         navDown					ButtonWeapon3
         navLeft                 ButtonSecondarySkin
         navRight                ButtonSecondaryMod1
 
-        pin_to_sibling			SecondaryName
+        pin_to_sibling			ButtonSentry
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-    ButtonSecondaryMod1
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_secondaryMod1"
-        scriptID				"secondaryMod1"
-        xpos					6
-
-        navUp					ButtonPrimary
-        navDown                 ButtonWeapon3
-        navLeft 				ButtonSecondary
-        navRight 				ButtonSecondaryMod2
-
-        pin_to_sibling			ButtonSecondary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonSecondaryMod2
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_secondaryMod1 HideWhenEditing_secondaryMod2"
-        scriptID				"secondaryMod2"
-        xpos					6
-
-        navUp					ButtonPrimary
-        navDown                 ButtonWeapon3
-        navLeft 				ButtonSecondaryMod1
-        navRight 				ButtonSecondaryMod3
-
-        pin_to_sibling			ButtonSecondaryMod1
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonSecondaryMod3
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_secondaryMod1 HideWhenEditing_secondaryMod2"
-        scriptID				"secondaryMod3"
-        xpos					6
-
-        navUp					ButtonPrimary
-        navDown                 ButtonWeapon3
-        navLeft 				ButtonSecondaryMod2
-        navRight 				ButtonSecondarySkin
-
-        pin_to_sibling			ButtonSecondaryMod2
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonSecondarySkin
-    {
-		ControlName				RuiButton
-		InheritProperties		CosmeticButton
-		classname               "A"
-        scriptID				"secondaryCamoIndex"
-        xpos					-560
-
-        navUp					ButtonPrimarySkin
-        navDown					ButtonWeapon3Skin
-        navLeft                 ButtonSecondaryMod3
-        navRight                ButtonSecondary
-
-        pin_to_sibling			ButtonSecondary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-//    SecondaryBind
-//    {
-//        ControlName				RuiPanel
-//        InheritProperties       RuiBindLabel
-//        xpos					6
-//        ypos                    -5
-//
-//        pin_to_sibling			ButtonSecondary
-//        pin_corner_to_sibling	BOTTOM_LEFT
-//        pin_to_sibling_corner	BOTTOM_RIGHT
-//    }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Weapon3Name
-	{
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        ypos					17
-
-        pin_to_sibling			ButtonSecondary
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-    }
-
-    ButtonWeapon3
+    ButtonRadarJammer
     {
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
-        classname				A
-        scriptID				"weapon3"
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"radar_jammer"
+        ypos					10
+
+        navUp					ButtonPrimary
+        navDown					ButtonWeapon3
+        navLeft                 ButtonSecondarySkin
+        navRight                ButtonSecondaryMod1
+
+        pin_to_sibling			ButtonMapHack
+        pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ButtonTitanSentry
+    {
+		ControlName				RuiButton
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"antititan_sentry"
+        ypos					10
 
         navUp					ButtonSecondary
         navDown					ButtonKit1
         navLeft                 ButtonWeapon3Skin
         navRight                ButtonWeapon3Mod1
 
-        pin_to_sibling			Weapon3Name
+        pin_to_sibling			ButtonBattery
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-    ButtonWeapon3Mod1
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_weapon3Mod1"
-        scriptID				"weapon3Mod1"
-        xpos					6
-
-        navUp					ButtonSecondary
-        navDown                 ButtonKit1
-        navLeft 				ButtonWeapon3
-        navRight 				ButtonWeapon3Mod2
-
-        pin_to_sibling			ButtonWeapon3
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonWeapon3Mod2
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_weapon3Mod1 HideWhenEditing_weapon3Mod2"
-        scriptID				"weapon3Mod2"
-        xpos					6
-
-        navUp					ButtonSecondary
-        navDown                 ButtonKit1
-        navLeft 				ButtonWeapon3Mod1
-        navRight 				ButtonWeapon3Mod3
-
-        pin_to_sibling			ButtonWeapon3Mod1
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonWeapon3Mod3
-    {
-        ControlName				RuiButton
-        InheritProperties		LoadoutButtonSmall
-        classname				"A HideWhenEditing_weapon3Mod1 HideWhenEditing_weapon3Mod2"
-        scriptID				"weapon3Mod3"
-        xpos					6
-
-        navUp					ButtonSecondary
-        navDown                 ButtonKit1
-        navLeft 				ButtonWeapon3Mod2
-        navRight 				ButtonWeapon3Skin
-
-        pin_to_sibling			ButtonWeapon3Mod2
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_RIGHT
-    }
-
-    ButtonWeapon3Skin
+    ButtonTitanSmartPistol
     {
 		ControlName				RuiButton
-		InheritProperties		CosmeticButton
-		classname               "A"
-        scriptID				"weapon3CamoIndex"
-        xpos					-560
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"smart_pistol"
+        ypos					10
 
-        navUp					ButtonSecondarySkin
+        navUp					ButtonSecondary
         navDown					ButtonKit1
-        navLeft                 ButtonWeapon3Mod3
-        navRight                ButtonWeapon3
+        navLeft                 ButtonWeapon3Skin
+        navRight                ButtonWeapon3Mod1
 
-        pin_to_sibling			ButtonWeapon3
+        pin_to_sibling			ButtonRadarJammer
         pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-    Weapon3Bind
-    {
-        ControlName				RuiPanel
-        InheritProperties       RuiBindLabel
-        classname               "A HideWhenEditing_weapon3Mod2"
-        xpos					6
-        ypos                    -5
-
-        pin_to_sibling			ButtonWeapon3
-        pin_corner_to_sibling	BOTTOM_LEFT
-        pin_to_sibling_corner	BOTTOM_RIGHT
+        pin_to_sibling_corner	BOTTOM_LEFT
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Kit1Name
-	{
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        ypos					39
-
-        pin_to_sibling			ButtonWeapon3
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-	}
-
-    ButtonKit1
+    ButtonPhaseRewind
     {
 		ControlName				RuiButton
-		InheritProperties		LoadoutButtonMedium
-        classname				A
-        scriptID				"passive1"
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"phase_rewind"
+        ypos					10
 
-        navUp					ButtonWeapon3
-        navDown					RenameEditBox
-        navLeft                 ButtonExecution
-        navRight                ButtonKit2
+        navUp					ButtonSecondary
+        navDown					ButtonKit1
+        navLeft                 ButtonWeapon3Skin
+        navRight                ButtonWeapon3Mod1
 
-        pin_to_sibling			Kit1Name
+        pin_to_sibling			ButtonTitanSentry
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-	Kit2Name
-	{
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        xpos					-230
-
-        pin_to_sibling			Kit1Name
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-	}
-
-    ButtonKit2
+    ButtonHardCover
     {
 		ControlName				RuiButton
-		InheritProperties		LoadoutButtonMedium
-        classname				A
-        scriptID				"passive2"
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"shield"
+        ypos					10
 
-        navUp					ButtonWeapon3
-        navDown					RenameEditBox
-        navLeft                 ButtonKit1
-        navRight                ButtonExecution
+        navUp					ButtonSecondary
+        navDown					ButtonKit1
+        navLeft                 ButtonWeapon3Skin
+        navRight                ButtonWeapon3Mod1
 
-        pin_to_sibling			Kit2Name
+        pin_to_sibling			ButtonTitanSmartPistol
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-    ExecutionName
-    {
-        ControlName				RuiPanel
-        InheritProperties       RuiLoadoutLabel
-        xpos					-230
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        pin_to_sibling			Kit2Name
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	TOP_LEFT
-    }
-
-    ButtonExecution
+    ButtonHoloPilotNova
     {
 		ControlName				RuiButton
-		InheritProperties		LoadoutButtonMedium
-        classname				A
-        scriptID				"execution"
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"holo_pilots"
+        ypos					10
 
-        navUp					ButtonWeapon3
-        navDown					RenameEditBox
-        navLeft                 ButtonKit2
-        navRight                ButtonKit1
+        navUp					ButtonSecondary
+        navDown					ButtonKit1
+        navLeft                 ButtonWeapon3Skin
+        navRight                ButtonWeapon3Mod1
 
-        pin_to_sibling			ExecutionName
+        pin_to_sibling			ButtonPhaseRewind
+        pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+    }
+
+    ButtonDiceRole
+    {
+		ControlName				RuiButton
+		InheritProperties		LoadoutButtonLarge
+        classname				BoostLoadoutPanelButtonClass
+        scriptID				"random"
+        ypos					11
+
+        navUp					ButtonSecondary
+        navDown					ButtonKit1
+        navLeft                 ButtonWeapon3Skin
+        navRight                ButtonWeapon3Mod1
+
+        pin_to_sibling			ButtonHardCover
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
