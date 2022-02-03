@@ -27,7 +27,7 @@ resource/ui/menus/custom_match_settings_ban.menu
 		{
 			ControlName				Label
 			InheritProperties		MenuTitle
-			labelText				"#MENU_TITLE_MATCH_SEETINGS_BAN"
+			labelText				"#MENU_TITLE_MATCH_SETTINGS_BAN"
 		}
 
 		ImgTopBar

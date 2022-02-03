@@ -113,10 +113,10 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
   initBoost()
 
   file.buttons = GetElementsByClassname( file.menu, "BanSettingCategoryButton" )
-  RHud_SetText( file.buttons[0], "#MODE_SETTING_BAN_PILOT" )
-  RHud_SetText( file.buttons[1], "#MODE_SETTING_BAN_WEAPON" )
-  RHud_SetText( file.buttons[2], "#MODE_SETTING_BAN_TITAN" )
-  RHud_SetText( file.buttons[3], "#MODE_SETTING_BAN_BOOST" )
+  RHud_SetText( file.buttons[0], Localize("#MODE_SETTING_BAN_PILOT") )
+  RHud_SetText( file.buttons[1], Localize("#MODE_SETTING_BAN_WEAPON") )
+  RHud_SetText( file.buttons[2], Localize("#MODE_SETTING_BAN_TITAN") )
+  RHud_SetText( file.buttons[3], Localize("#MODE_SETTING_BAN_BOOST") )
 
   selectButton(file.buttons, 2, 0)
   selectDisplay(file.loadoutDisplays, 2, 0)
@@ -247,7 +247,7 @@ void function clickOpenSubMenu(var pressedButton) {
 void function clickSelectInSubmenu(var pressedButton) 
 {
   int modSelected = rearangeIntToButton(int(Hud_GetScriptID( pressedButton )))
-  
+
   //This defines the screen which calls this button so that weapons and titans can use the same logic
   if (file.selected == 1) {
     if (0 == file.weapon.modTypeSelected) {
@@ -542,7 +542,7 @@ void function reloadBoostScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
   {
-     Hud_SetSelected( button , !file.boost.boosts[Hud_GetScriptID(button)].disabled )
+     Hud_SetSelected( button , file.boost.boosts[Hud_GetScriptID(button)].disabled )
   }
 }
 
@@ -550,7 +550,7 @@ void function reloadPilotScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "PilotLoadoutPanelButtonClass" ))
   {
-    Hud_SetSelected( button , !file.pilot.attributes[Hud_GetScriptID(button)].disabled )
+    Hud_SetSelected( button , file.pilot.attributes[Hud_GetScriptID(button)].disabled )
   }
 }
 
@@ -559,7 +559,7 @@ void function setAllAttributes(bool enabled)
   //Pilot
   foreach(BoolAttributte attribute in file.pilot.attributes)
   {
-    attribute.disabled = enabled
+    attribute.disabled = !enabled
   }
   //Weapon
   for(int i = 0; i < file.weapon.categories.len();i++) 
@@ -589,7 +589,7 @@ void function setAllAttributes(bool enabled)
   //Boost
   foreach(BoolAttributte attribute in file.boost.boosts)
   {
-    attribute.disabled = enabled
+    attribute.disabled = !enabled
   }
   reloadCurrentScreen()
 }
@@ -600,7 +600,7 @@ void function initPilot()
   pilot.loadoutDisplay = file.loadoutDisplays[0]
 
   var lableOne = Hud_GetChild( file.pilot.loadoutDisplay, "TacticalName" )
-  SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_PILOT_TACTIAL") )
+  SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_PILOT_TACTICAL") )
 
   var lableTwo = Hud_GetChild( file.pilot.loadoutDisplay, "OrdnanceName" )
   SetLabelRuiText( lableTwo, Localize("#MODE_SETTING_BAN_PILOT_ORDINANCE") )
@@ -631,9 +631,8 @@ void function initPilot()
 
   var rui = Hud_GetRui( Hud_GetChild( pilot.loadoutDisplay, "PilotDetails" ) )
 
-	RuiSetString( rui, "nameText", "Banning Pilot Utilites" )
-	RuiSetString( rui, "descText", "A selected pilot utility cannot be chosen by a player. \n" +
-                                 "When all tacticals or ordicances are selected they will then be disabled." )
+	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_PILOT_LBL_TITLE") )
+	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_PILOT_LBL_TEXT") )
 }
 
 BoolAttributte function createBoolAttributte( asset image) 
@@ -1123,10 +1122,8 @@ void function initWeapon()
 
   var rui = Hud_GetRui( Hud_GetChild( weapon.loadoutDisplay, "WeaponDetails" ) )
 
-	RuiSetString( rui, "nameText", "Banning Weapons" )
-	RuiSetString( rui, "descText", "A selected weapon cannot be chosen by a player. \n" +
-                                 "You can force attachemnts and visors by selecting them. When \"?\" is chosen it is up to the player.\n" + 
-                                 "When all weapons are disabled the player will be given an archer." )
+	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_WEAPON") )
+	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_WEAPON_LBL_TITLE") )
 }
 
 Weapon function createWeapon(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1, ArrayAttribute visor) 
@@ -1485,10 +1482,8 @@ void function initTitan()
 
   var rui = Hud_GetRui( Hud_GetChild( titan.loadoutDisplay, "TitanDetails" ) )
 
-	RuiSetString( rui, "nameText", "Banning Titans" )
-	RuiSetString( rui, "descText", "A selected titan cannot be chosen by a player. \n" +
-                                 "You can force titan kits by selecting them. When \"?\" is chosen it is up to the player. \n" + 
-                                 "When all titans are disabled the player won't be able to spawn a titan." )
+	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_TITAN_LBL_TITLE") )
+	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_TITAN_LBL_TEXT") )
 }
 
 void function initBoost() 
@@ -1523,7 +1518,6 @@ void function initBoost()
 
   var rui = Hud_GetRui( Hud_GetChild( boost.loadoutDisplay, "BoostDetails" ) )
 
-	RuiSetString( rui, "nameText", "Banning Boosts" )
-	RuiSetString( rui, "descText", "A selected boost cannot be chosen by a player. \n" +
-                                 "When all boosts are selected boosts will be disabled." )
+	RuiSetString( rui, "nameText", Localize("MODE_SETTING_BAN_BOOST_LBL_TITLE") )
+	RuiSetString( rui, "descText", Localize("MODE_SETTING_BAN_BOOST_LBL_TEXT") )
 }
