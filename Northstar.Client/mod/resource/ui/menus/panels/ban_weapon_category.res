@@ -7,6 +7,7 @@
 			classname				BanWeaponCategoryButton
         	scriptID				0
             ypos                    78
+			xpos					-50
 
         	pin_corner_to_sibling	TOP_LEFT
         	pin_to_sibling_corner	BOTTOM_LEFT
@@ -121,10 +122,10 @@
 	    {
 		    ControlName				CNestedPanel
 			classname 				weaponDisplay
-		    xpos					450
+		    xpos					200
     	    ypos                    0
 		    zpos					10
-			wide					1048
+			wide					500
 			tall					225
 
 			scriptID				0
@@ -137,10 +138,10 @@
 	    {
 		    ControlName				CNestedPanel
 			classname 				weaponDisplay
-		    xpos					450
+		    xpos					200
     	    ypos                    150
 		    zpos					10
-			wide					1048
+			wide					500
 			tall					225
 
 			scriptID				1
@@ -153,10 +154,10 @@
 	    {
 		    ControlName				CNestedPanel
 			classname 				weaponDisplay
-		    xpos					450
+		    xpos					200
     	    ypos                    300
 		    zpos					10
-			wide					1048
+			wide					500
 			tall					225
 
 			scriptID				2
@@ -169,10 +170,10 @@
 	    {
 		    ControlName				CNestedPanel
 			classname 				weaponDisplay
-		    xpos					450
-    	    ypos                    450
+		    xpos					825
+    	    ypos                    0
 		    zpos					10
-			wide					1048
+			wide					500
 			tall					225
 
 			scriptID				3
@@ -185,15 +186,24 @@
 	    {
 		    ControlName				CNestedPanel
 			classname 				weaponDisplay
-		    xpos					450
-    	    ypos                    600
+		    xpos					825
+    	    ypos                    150
 		    zpos					10
-			wide					1048
+			wide					500
 			tall					225
 
 			scriptID				4
 		    visible					1
 		    enabled                 0
 		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
-	    } 
+	    }
+
+ 	WeaponDetails
+    {
+        ControlName				RuiPanel
+        InheritProperties		ItemDetails
+	    xpos					600
+    	ypos                    700
+		zpos					10
+    } 
 }

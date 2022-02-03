@@ -258,5 +258,12 @@
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-
+    PilotDetails
+    {
+        ControlName				RuiPanel
+        InheritProperties		ItemDetails
+	    xpos					600
+    	ypos                    700
+		zpos					10
+    }
 }

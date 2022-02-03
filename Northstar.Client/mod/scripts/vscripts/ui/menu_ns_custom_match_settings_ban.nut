@@ -1,7 +1,7 @@
 global function AddNorthstarCustomMatchSettingsBanMenu
 
 struct BoolAttributte {
-  bool disabeled = false
+  bool disabled = false
   asset image
 }
 
@@ -21,9 +21,9 @@ struct Weapon {
     asset image
     bool disabled = false
 
-    int selectedMod0 
-    int selectedMod1
-    int selectedVisor
+    int selectedMod0 = 0
+    int selectedMod1 = 0
+    int selectedVisor = 0
 
     ArrayAttribute &mod0
     ArrayAttribute &mod1 
@@ -52,9 +52,9 @@ struct Titan {
     asset image
     bool disabled = false
 
-    int selectedKit0 
-    int selectedKit1
-    int selectedKit2
+    int selectedKit0 = 0
+    int selectedKit1 = 0
+    int selectedKit2 = 0
 
     ArrayAttribute &kit0
     ArrayAttribute &kit1 
@@ -102,7 +102,8 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
 {
   file.menu = GetMenu( "CustomMatchBanSettingsMenu" )
   AddMenuFooterOption( file.menu, BUTTON_B, "#B_BUTTON_BACK", "#BACK" )
-
+  AddMenuFooterOption(file.menu, BUTTON_A, "#A_RESTORE_DEFAULTS", "#RESTORE_DEFAULTS", callRestoreDefaults )
+  AddMenuFooterOption(file.menu, BUTTON_Y, "#Y_BAN_ALL", "#BAN_ALL", callBanAll )
 
   file.loadoutDisplays = GetElementsByClassname( file.menu, "loadoutDisplay" )
   
@@ -145,6 +146,8 @@ void function InitCustomSelectMenu()
 
 	AddMenuFooterOption( menu, BUTTON_A, "#A_BUTTON_SELECT" )
 	AddMenuFooterOption( menu, BUTTON_B, "#B_BUTTON_BACK", "#BACK" )
+
+
 }
 
 void function OnModSelectBGScreen_Activate( var button )
@@ -162,13 +165,22 @@ void function clickOpenSubMenu(var pressedButton) {
 	RuiSetImage( ruiButtonFrame, "basicImage", $"rui/borders/menu_border_button" )
 	RuiSetFloat3( ruiButtonFrame, "basicImageColor", <0,0,0> )
 	RuiSetFloat( ruiButtonFrame, "basicImageAlpha", 0.25 )
-  
+
 	array<var> buttons = GetElementsByClassname( menu, "ModSelectClass" )
 
   int uiElementId = int(Hud_GetScriptID( Hud_GetParent( pressedButton ) ) )  
   int buttonSelected = int(Hud_GetScriptID( pressedButton ))
 
+  //If Monarch buttons move it to the right 
+  if(file.selected == 2 && uiElementId == 7) 
+  {
+    var a = Hud_GetChild(file.subMenu, "ButtonFrame")
+
+    Hud_SetX( a, Hud_GetX(a) + 150)
+  }
+
   array<asset> items
+  int currentlySelected = 0
 
   //This defines the screen which calls this button so that weapons and titans can use the same logic
   if (file.selected == 1) {
@@ -177,10 +189,13 @@ void function clickOpenSubMenu(var pressedButton) {
 
     if (0 == buttonSelected) {
       items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].mod0.images
+      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedMod0
     } else if (1 == buttonSelected) {
       items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].mod1.images
+      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedMod1
     } else {
       items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].visor.images
+      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedVisor
     }
   } else if (file.selected == 2) {
     file.titan.selectedTitanAttribute = buttonSelected
@@ -188,10 +203,13 @@ void function clickOpenSubMenu(var pressedButton) {
 
     if (0 == buttonSelected) {
       items = file.titan.titans[uiElementId].kit0.images
+      currentlySelected = file.titan.titans[uiElementId].selectedKit0
     } else if (1 == buttonSelected) {
       items = file.titan.titans[uiElementId].kit1.images
+      currentlySelected = file.titan.titans[uiElementId].selectedKit1
     } else {
       items = file.titan.titans[uiElementId].kit2.images
+      currentlySelected = file.titan.titans[uiElementId].selectedKit2
     }
   }
 
@@ -208,18 +226,19 @@ void function clickOpenSubMenu(var pressedButton) {
   for(int i = 0; i < buttons.len();i++) {
     var button = buttons[rearangeButtonTwoInt(i)]
     var rui = Hud_GetRui( button )
+    Hud_SetSelected( button, false )
 
     if (i < items.len()) {
 		  Hud_SetEnabled( button, true )
-		  Hud_SetSelected( button, false )
       RuiSetBool( rui, "isVisible", true )
       RuiSetImage( rui, "buttonImage", items[i] )
     } else {
 		  Hud_SetEnabled( button, false )
-		  Hud_SetSelected( button, false )
       RuiSetBool( rui, "isVisible", false )
     }
   }
+
+  Hud_SetSelected( buttons[rearangeButtonTwoInt(currentlySelected)], true )
 
   HideSubmenuBackgroundElems()
   thread RestoreHiddenElemsOnMenuChange()
@@ -228,7 +247,7 @@ void function clickOpenSubMenu(var pressedButton) {
 void function clickSelectInSubmenu(var pressedButton) 
 {
   int modSelected = rearangeIntToButton(int(Hud_GetScriptID( pressedButton )))
-
+  
   //This defines the screen which calls this button so that weapons and titans can use the same logic
   if (file.selected == 1) {
     if (0 == file.weapon.modTypeSelected) {
@@ -347,8 +366,6 @@ void function RestoreHiddenSubmenuBackgroundElems()
 	  foreach ( elem in elems )
 		  Hud_Hide( elem )
   }
-
-  
 }
 
 void function selectButton(array<var> buttons, int current, int selected) {
@@ -369,13 +386,23 @@ void function callChangeMainDisplay( var pressedButton )
     selectDisplay(file.loadoutDisplays, file.selected, selected)
     file.selected = selected
 
-    if(file.selected == 1) {
+
+    reloadCurrentScreen()
+  }
+}
+
+void function reloadCurrentScreen() 
+{
+    if (file.selected == 0) {
+      reloadPilotScreen()
+    } else if(file.selected == 1) {
       loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
     } else if (file.selected == 2) {
       reloadTitanScreen()
+    } else if (file.selected == 3) {
+      reloadBoostScreen()
     }
-    
-  }
+    RestoreHiddenSubmenuBackgroundElems()
 }
 
 void function callPilotButtonClick(var pressedButton) 
@@ -392,18 +419,35 @@ void function callBoostClick(var pressedButton)
 
 void function callWeaponButtonClick(var pressedButton) 
 {
-  int weaponId = int(Hud_GetScriptID( Hud_GetParent( pressedButton ) ) ) 
-  bool state = !file.weapon.categories[file.weapon.categorySelected].weapons[weaponId].disabled
-
+  int id = int(Hud_GetScriptID( Hud_GetParent( pressedButton ) ) )
+  bool state
+  if(file.selected == 1) 
+  {
+    state = !file.weapon.categories[file.weapon.categorySelected].weapons[id].disabled
+    file.weapon.categories[file.weapon.categorySelected].weapons[id].disabled = state
+  } 
+  else 
+  {
+    state = !file.titan.titans[id].disabled
+    file.titan.titans[id].disabled = state
+  } 
   Hud_SetSelected( pressedButton , state )
+}
 
-  file.weapon.categories[file.weapon.categorySelected].weapons[weaponId].disabled = state
+void function callRestoreDefaults(var pressedButton) 
+{
+  setAllAttributes(true)
+}
+
+void function callBanAll(var pressedButton) 
+{
+  setAllAttributes(false)
 }
 
 void function switchBoolAttribute(var button, BoolAttributte attribute)
 {
-  attribute.disabeled = !attribute.disabeled
-  Hud_SetSelected( button , attribute.disabeled )
+  attribute.disabled = !attribute.disabled
+  Hud_SetSelected( button , attribute.disabled )
 }
 
 void function changeWeaponDisplay( var pressedButton )
@@ -421,6 +465,9 @@ void function loadWeaponCategory(WeaponCategory category)
 {
   for(int i = 0; i < file.weapon.weaponDisplays.len();i++) {
       if(i < category.weapons.len()) {
+
+        Hud_SetSelected( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" ) , category.weapons[i].disabled )
+
         RuiSetImage( 
           Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" )), 
           "buttonImage", 
@@ -459,6 +506,9 @@ void function loadWeaponCategory(WeaponCategory category)
 
 void function reloadTitanScreen() {
   for(int i = 0; i < file.titan.titanDisplays.len();i++) {
+
+    Hud_SetSelected( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , file.titan.titans[i].disabled )
+
     RuiSetImage( 
       Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
       "buttonImage", 
@@ -474,47 +524,74 @@ void function reloadTitanScreen() {
       "buttonImage", 
       file.titan.titans[i].kit0.images[file.titan.titans[i].selectedKit0] )
 
+
     RuiSetImage( 
       Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
       "buttonImage", 
       file.titan.titans[i].kit1.images[file.titan.titans[i].selectedKit1] )     
 
-
     RuiSetImage( 
       Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
       "buttonImage", 
-      file.titan.titans[i].kit2.images[file.titan.titans[i].selectedKit2] )  
+      file.titan.titans[i].kit2.images[file.titan.titans[i].selectedKit2] )
+       
   }
 }
 
-void function reloadBoostScreen() {
-  for(int i = 0; i < file.titan.titanDisplays.len();i++) {
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
-      "buttonImage", 
-      file.titan.titans[i].image )
-
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame")),
-     "basicImage", 
-     file.titan.titans[i].image )  
-
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod0" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit0.images[file.titan.titans[i].selectedKit0] )
-
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit1.images[file.titan.titans[i].selectedKit1] )     
-
-
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit2.images[file.titan.titans[i].selectedKit2] )  
+void function reloadBoostScreen() 
+{
+  foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
+  {
+     Hud_SetSelected( button , !file.boost.boosts[Hud_GetScriptID(button)].disabled )
   }
+}
+
+void function reloadPilotScreen() 
+{
+  foreach(var button in GetElementsByClassname( file.menu, "PilotLoadoutPanelButtonClass" ))
+  {
+    Hud_SetSelected( button , !file.pilot.attributes[Hud_GetScriptID(button)].disabled )
+  }
+}
+
+void function setAllAttributes(bool enabled) 
+{
+  //Pilot
+  foreach(BoolAttributte attribute in file.pilot.attributes)
+  {
+    attribute.disabled = enabled
+  }
+  //Weapon
+  for(int i = 0; i < file.weapon.categories.len();i++) 
+  {
+    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    {
+      Weapon weapon = file.weapon.categories[i].weapons[j]
+      weapon.disabled = !enabled
+      if(enabled) {
+        weapon.selectedMod0 = 0
+        weapon.selectedMod1 = 0
+        weapon.selectedVisor = 0
+      }
+    }
+  }
+  //Titan
+  for(int i = 0; i < file.titan.titans.len(); i++) 
+  {
+      Titan titan = file.titan.titans[i]
+      titan.disabled = !enabled
+      if(enabled) {
+        titan.selectedKit0 = 0
+        titan.selectedKit1 = 0
+        titan.selectedKit2 = 0
+      }
+  }
+  //Boost
+  foreach(BoolAttributte attribute in file.boost.boosts)
+  {
+    attribute.disabled = enabled
+  }
+  reloadCurrentScreen()
 }
 
 void function initPilot() 
@@ -551,6 +628,12 @@ void function initPilot()
     AddButtonEventHandler( button, UIE_CLICK, callPilotButtonClick )
   }
 
+
+  var rui = Hud_GetRui( Hud_GetChild( pilot.loadoutDisplay, "PilotDetails" ) )
+
+	RuiSetString( rui, "nameText", "Banning Pilot Utilites" )
+	RuiSetString( rui, "descText", "A selected pilot utility cannot be chosen by a player. \n" +
+                                 "When all tacticals or ordicances are selected they will then be disabled." )
 }
 
 BoolAttributte function createBoolAttributte( asset image) 
@@ -748,14 +831,26 @@ void function initWeapon()
   ArrayAttribute sniperViser
   sniperViser.images = [
     $"rui/menu/common/unlock_random",
-    $"r2_ui/menus/loadout_icons/attachments/iron_sights",
+    $"r2_ui/menus/loadout_icons/attachments/stock_scope",
     $"r2_ui/menus/loadout_icons/attachments/variable_zoom",
     $"r2_ui/menus/loadout_icons/attachments/threat_scope",]
   sniperViser.values = [
-    "undefined",
+    "stock_scope",
     "iron_sights",
     "variable_zoom",
     "threat_scope",]
+
+  ArrayAttribute takeViser
+  takeViser.images = [
+    $"rui/menu/common/unlock_random",
+    $"r2_ui/menus/loadout_icons/attachments/stock_doubletake_sight",
+    $"r2_ui/menus/loadout_icons/attachments/variable_zoom",
+    $"r2_ui/menus/loadout_icons/attachments/threat_scope",]
+  takeViser.values = [
+    "stock_doubletake_sight",
+    "iron_sights",
+    "variable_zoom",
+    "threat_scope",]  
 
   ArrayAttribute sniperModOne
   sniperModOne.images = [
@@ -807,7 +902,7 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_doubletake",
     sniperModOne,
     sniperModOne,
-    sniperViser))
+    takeViser))
 
   sniper.weapons.append(createWeapon(
     "dmr",
@@ -1025,6 +1120,13 @@ void function initWeapon()
 
   selectButton(weapon.buttons, 1, 0)
   changeWeaponDisplay(weapon.buttons[0])
+
+  var rui = Hud_GetRui( Hud_GetChild( weapon.loadoutDisplay, "WeaponDetails" ) )
+
+	RuiSetString( rui, "nameText", "Banning Weapons" )
+	RuiSetString( rui, "descText", "A selected weapon cannot be chosen by a player. \n" +
+                                 "You can force attachemnts and visors by selecting them. When \"?\" is chosen it is up to the player.\n" + 
+                                 "When all weapons are disabled the player will be given an archer." )
 }
 
 Weapon function createWeapon(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1, ArrayAttribute visor) 
@@ -1069,6 +1171,18 @@ void function initTitan()
 
   var lableOne = Hud_GetChild( file.titan.loadoutDisplay, "TitanName" )
   SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_TITAN") )
+
+  array<var> monarchCoreButtons = GetElementsByClassname( file.menu , "MonarchCoreButton" )
+
+  Hud_SetText(monarchCoreButtons[0], "Core 1 ->")
+  Hud_SetText(monarchCoreButtons[1], "Core 2 ->")
+  Hud_SetText(monarchCoreButtons[2], "Core 3 ->")
+
+  AddButtonEventHandler( monarchCoreButtons[0], UIE_CLICK, clickOpenSubMenu )
+  AddButtonEventHandler( monarchCoreButtons[1], UIE_CLICK, clickOpenSubMenu )
+  AddButtonEventHandler( monarchCoreButtons[2], UIE_CLICK, clickOpenSubMenu )
+
+  
 
   titan.titanDisplays = GetElementsByClassname( file.menu, "titanDisplay")
 
@@ -1368,6 +1482,13 @@ void function initTitan()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
   reloadTitanScreen()
+
+  var rui = Hud_GetRui( Hud_GetChild( titan.loadoutDisplay, "TitanDetails" ) )
+
+	RuiSetString( rui, "nameText", "Banning Titans" )
+	RuiSetString( rui, "descText", "A selected titan cannot be chosen by a player. \n" +
+                                 "You can force titan kits by selecting them. When \"?\" is chosen it is up to the player. \n" + 
+                                 "When all titans are disabled the player won't be able to spawn a titan." )
 }
 
 void function initBoost() 
@@ -1399,4 +1520,10 @@ void function initBoost()
     RuiSetImage( Hud_GetRui( button  ), "buttonImage",  boost.boosts[buttonId].image)
     AddButtonEventHandler( button, UIE_CLICK, callBoostClick )
   }
+
+  var rui = Hud_GetRui( Hud_GetChild( boost.loadoutDisplay, "BoostDetails" ) )
+
+	RuiSetString( rui, "nameText", "Banning Boosts" )
+	RuiSetString( rui, "descText", "A selected boost cannot be chosen by a player. \n" +
+                                 "When all boosts are selected boosts will be disabled." )
 }
