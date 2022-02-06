@@ -61,13 +61,21 @@ struct Titan {
     ArrayAttribute &kit2
 }
 
+struct TitanCategory {
+    string displayName
+
+    array<Titan> titans
+}
+
 struct TitanDisplay {
   var loadoutDisplay
 
+  int categorySelected = 1
   int selectedTitanAttribute
   int selectedTitan
 
-  array<Titan> titans
+  array<var> buttons = []
+  array<TitanCategory> categories
   array<var> titanDisplays 
 } 
 
@@ -105,6 +113,9 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
   AddMenuFooterOption(file.menu, BUTTON_A, "#A_RESTORE_DEFAULTS", "#RESTORE_DEFAULTS", callRestoreDefaults )
   AddMenuFooterOption(file.menu, BUTTON_Y, "#Y_BAN_ALL", "#BAN_ALL", callBanAll )
 
+  AddButtonEventHandler( Hud_GetChild(file.menu, "Export"), UIE_CLICK, exportConfigToString )
+  AddButtonEventHandler( Hud_GetChild(file.menu, "Import"), UIE_CLICK, importConfigToString )
+  
   file.loadoutDisplays = GetElementsByClassname( file.menu, "loadoutDisplay" )
   
   initPilot()
@@ -171,14 +182,6 @@ void function clickOpenSubMenu(var pressedButton) {
   int uiElementId = int(Hud_GetScriptID( Hud_GetParent( pressedButton ) ) )  
   int buttonSelected = int(Hud_GetScriptID( pressedButton ))
 
-  //If Monarch buttons move it to the right 
-  if(file.selected == 2 && uiElementId == 7) 
-  {
-    var a = Hud_GetChild(file.subMenu, "ButtonFrame")
-
-    Hud_SetX( a, Hud_GetX(a) + 150)
-  }
-
   array<asset> items
   int currentlySelected = 0
 
@@ -202,14 +205,14 @@ void function clickOpenSubMenu(var pressedButton) {
     file.titan.selectedTitan = uiElementId
 
     if (0 == buttonSelected) {
-      items = file.titan.titans[uiElementId].kit0.images
-      currentlySelected = file.titan.titans[uiElementId].selectedKit0
+      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit0.images
+      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit0
     } else if (1 == buttonSelected) {
-      items = file.titan.titans[uiElementId].kit1.images
-      currentlySelected = file.titan.titans[uiElementId].selectedKit1
+      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit1.images
+      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit1
     } else {
-      items = file.titan.titans[uiElementId].kit2.images
-      currentlySelected = file.titan.titans[uiElementId].selectedKit2
+      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit2.images
+      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit2
     }
   }
 
@@ -260,13 +263,13 @@ void function clickSelectInSubmenu(var pressedButton)
     loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
   } else {
     if (0 == file.titan.selectedTitanAttribute) {
-      file.titan.titans[file.titan.selectedTitan].selectedKit0 = modSelected
+      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit0 = modSelected
     } else if (1 == file.titan.selectedTitanAttribute) {
-      file.titan.titans[file.titan.selectedTitan].selectedKit1 = modSelected
+      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit1 = modSelected
     } else {
-      file.titan.titans[file.titan.selectedTitan].selectedKit2 = modSelected
+      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit2 = modSelected
     }
-    reloadTitanScreen()
+    loadTitanCategory(file.titan.categories[file.titan.categorySelected])
   }
   
   OnModSelectBGScreen_Activate(null)
@@ -398,7 +401,7 @@ void function reloadCurrentScreen()
     } else if(file.selected == 1) {
       loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
     } else if (file.selected == 2) {
-      reloadTitanScreen()
+      loadTitanCategory(file.titan.categories[file.titan.categorySelected])
     } else if (file.selected == 3) {
       reloadBoostScreen()
     }
@@ -428,8 +431,8 @@ void function callWeaponButtonClick(var pressedButton)
   } 
   else 
   {
-    state = !file.titan.titans[id].disabled
-    file.titan.titans[id].disabled = state
+    state = !file.titan.categories[file.titan.categorySelected].titans[id].disabled
+    file.titan.categories[file.titan.categorySelected].titans[id].disabled = state
   } 
   Hud_SetSelected( pressedButton , state )
 }
@@ -504,37 +507,67 @@ void function loadWeaponCategory(WeaponCategory category)
   }
 }
 
-void function reloadTitanScreen() {
+void function changeTitanDisplay( var pressedButton )
+{
+  int selected = int( Hud_GetScriptID( pressedButton ))
+  if(selected != file.titan.categorySelected) {
+    selectButton(file.titan.buttons, file.titan.categorySelected, selected)
+    loadTitanCategory(file.titan.categories[selected])
+    
+    file.titan.categorySelected = selected
+  }
+}
+
+void function loadTitanCategory(TitanCategory category) {
   for(int i = 0; i < file.titan.titanDisplays.len();i++) {
+    if(i < category.titans.len()) {
 
-    Hud_SetSelected( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , file.titan.titans[i].disabled )
+      Hud_SetSelected( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , category.titans[i].disabled )
 
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
-      "buttonImage", 
-      file.titan.titans[i].image )
+      RuiSetImage( 
+        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
+        "buttonImage", 
+        category.titans[i].image )
 
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame")),
-     "basicImage", 
-     file.titan.titans[i].image )  
+      RuiSetImage( 
+        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame")),
+        "basicImage", 
+        category.titans[i].image )  
 
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod0" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit0.images[file.titan.titans[i].selectedKit0] )
+      RuiSetImage( 
+        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod0" )), 
+        "buttonImage", 
+        category.titans[i].kit0.images[category.titans[i].selectedKit0] )
 
 
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit1.images[file.titan.titans[i].selectedKit1] )     
+      RuiSetImage( 
+        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
+        "buttonImage", 
+        category.titans[i].kit1.images[category.titans[i].selectedKit1] )     
 
-    RuiSetImage( 
-      Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
-      "buttonImage", 
-      file.titan.titans[i].kit2.images[file.titan.titans[i].selectedKit2] )
-       
+      RuiSetImage( 
+        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
+        "buttonImage", 
+        category.titans[i].kit2.images[category.titans[i].selectedKit2] )
+
+      //Check if is Monarch Core Abilities
+      if(category.titans[i].name == "monarchCores") 
+      {
+        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , false )
+        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame" ) , false ) 
+        
+      } 
+      else 
+      {
+        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , true )
+        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame" ) , true )   
+      }  
+
+      Hud_SetVisible( file.titan.titanDisplays[i] , true )
+      
+    } else {
+      Hud_SetVisible( file.titan.titanDisplays[i] , false )
+    }
   }
 }
 
@@ -542,6 +575,7 @@ void function reloadBoostScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
   {
+    print(file.boost.boosts[Hud_GetScriptID(button)].disabled)
      Hud_SetSelected( button , file.boost.boosts[Hud_GetScriptID(button)].disabled )
   }
 }
@@ -576,15 +610,18 @@ void function setAllAttributes(bool enabled)
     }
   }
   //Titan
-  for(int i = 0; i < file.titan.titans.len(); i++) 
+  for(int i = 0; i < file.titan.categories.len(); i++) 
   {
-      Titan titan = file.titan.titans[i]
+    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    {
+      Titan titan = file.titan.categories[i].titans[j]
       titan.disabled = !enabled
       if(enabled) {
         titan.selectedKit0 = 0
         titan.selectedKit1 = 0
         titan.selectedKit2 = 0
       }
+    }
   }
   //Boost
   foreach(BoolAttributte attribute in file.boost.boosts)
@@ -592,6 +629,153 @@ void function setAllAttributes(bool enabled)
     attribute.disabled = !enabled
   }
   reloadCurrentScreen()
+}
+
+void function exportConfigToString(var pressedButton) 
+{
+  string exportString = ""
+  //Pilot
+  foreach(BoolAttributte attribute in file.pilot.attributes)
+  {
+    if(attribute.disabled) {
+      exportString += string(1)
+    } else {
+      exportString += string(0)
+    }
+  }
+  //Weapon
+  for(int i = 0; i < file.weapon.categories.len();i++) 
+  {
+    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    {
+      Weapon weapon = file.weapon.categories[i].weapons[j]
+      if(weapon.disabled) {
+        exportString += string(1)
+      } else {
+        exportString += string(0)
+      }
+      exportString += string(weapon.selectedMod0)
+      exportString += string(weapon.selectedMod1)
+      exportString += string(weapon.selectedVisor)
+    }
+  }
+  //Titan
+  for(int i = 0; i < file.titan.categories.len(); i++) 
+  {
+    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    {
+      Titan titan = file.titan.categories[i].titans[j]
+      if(titan.disabled) {
+        exportString += string(1)
+      } else {
+        exportString += string(0)
+      }
+      exportString += string(titan.selectedKit0)
+      exportString += string(titan.selectedKit1)
+      exportString += string(titan.selectedKit2)
+    }
+  }
+  //Boost
+  foreach(BoolAttributte attribute in file.boost.boosts)
+  {
+    if(attribute.disabled) {
+      exportString += string(1)
+    } else {
+      exportString += string(0)
+    }
+  }
+
+  Hud_SetText( Hud_GetChild( file.menu, "ImportExportArea" ), exportString )
+}
+
+void function importConfigToString(var pressedButton) 
+{
+  string importString = Hud_GetUTF8Text( Hud_GetChild( file.menu, "ImportExportArea" ) ) 
+  array<int> importArray
+
+  if(importString.len() != 177) {
+    return
+  }
+  for(int i = 0; i < importString.len(); i++) {
+    if(importString[i] == 55) {
+      importArray.append(7)
+    } else if(importString[i] == 54) {
+      importArray.append(6)
+    } else if(importString[i] == 53) {
+      importArray.append(5)
+    } else if(importString[i] == 52) {
+      importArray.append(4)
+    } else if(importString[i] == 51) {
+      importArray.append(3)
+    } else if(importString[i] == 50) {
+      importArray.append(2)
+    } else if(importString[i] == 49) {
+      importArray.append(1)
+    } else {
+      importArray.append(0)
+    }
+  }
+  int count = 0
+  //Pilot
+  foreach(BoolAttributte attribute in file.pilot.attributes)
+  {
+    if(importArray[count++] == 1) {
+      attribute.disabled = true
+    } else {
+      attribute.disabled = false
+    }
+  }
+  
+  
+  //Weapon
+  for(int i = 0; i < file.weapon.categories.len();i++) 
+  {
+    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    {
+      Weapon weapon = file.weapon.categories[i].weapons[j]
+
+      if(importArray[count++] == 1) {
+        weapon.disabled = true
+      } else {
+        weapon.disabled = false
+      }
+
+      weapon.selectedMod0 = importArray[count++]
+      weapon.selectedMod1 = importArray[count++]
+      weapon.selectedVisor = importArray[count++]
+    }
+  }
+  
+  //Titan
+  for(int i = 0; i < file.titan.categories.len(); i++) 
+  {
+    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    {
+      Titan titan = file.titan.categories[i].titans[j]
+      if(importArray[count++] == 1) {
+        titan.disabled = true
+      } else {
+        titan.disabled = false
+      }
+
+      print("Before" + titan.selectedKit0 + " " + titan.selectedKit1 + " " + titan.selectedKit2)
+      titan.selectedKit0 = importArray[count++]
+      titan.selectedKit1 = importArray[count++]
+      titan.selectedKit2 = importArray[count++]
+      print("After" + titan.selectedKit0 + " " + titan.selectedKit1 + " " + titan.selectedKit2)
+    }
+  }
+  //Boost
+  foreach(BoolAttributte attribute in file.boost.boosts)
+  {
+    print(importArray[count])
+    if(importArray[count++] == 1) {
+      attribute.disabled = true
+    } else {
+      attribute.disabled = false
+    }
+  } 
+  reloadCurrentScreen() 
 }
 
 void function initPilot() 
@@ -1122,8 +1306,8 @@ void function initWeapon()
 
   var rui = Hud_GetRui( Hud_GetChild( weapon.loadoutDisplay, "WeaponDetails" ) )
 
-	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_WEAPON") )
-	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_WEAPON_LBL_TITLE") )
+	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_WEAPON_LBL_TITLE") )
+	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_WEAPON_LBL_TEXT") )
 }
 
 Weapon function createWeapon(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1, ArrayAttribute visor) 
@@ -1169,17 +1353,7 @@ void function initTitan()
   var lableOne = Hud_GetChild( file.titan.loadoutDisplay, "TitanName" )
   SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_TITAN") )
 
-  array<var> monarchCoreButtons = GetElementsByClassname( file.menu , "MonarchCoreButton" )
-
-  Hud_SetText(monarchCoreButtons[0], "Core 1 ->")
-  Hud_SetText(monarchCoreButtons[1], "Core 2 ->")
-  Hud_SetText(monarchCoreButtons[2], "Core 3 ->")
-
-  AddButtonEventHandler( monarchCoreButtons[0], UIE_CLICK, clickOpenSubMenu )
-  AddButtonEventHandler( monarchCoreButtons[1], UIE_CLICK, clickOpenSubMenu )
-  AddButtonEventHandler( monarchCoreButtons[2], UIE_CLICK, clickOpenSubMenu )
-
-  
+  titan.buttons = GetElementsByClassname( file.menu, "BanTitanCategoryButton" )  
 
   titan.titanDisplays = GetElementsByClassname( file.menu, "titanDisplay")
 
@@ -1214,68 +1388,9 @@ void function initTitan()
   ]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-  Titan ion
-  ion.name = "ion"
-  ion.image = $"rui/callsigns/callsign_fd_ion_hard"
-  ion.disabled = false
-  ion.selectedKit0 = 0
-  ion.selectedKit1 = 0
-  ion.selectedKit2 = 0
-  ArrayAttribute ionKit
-  ionKit.images = [
-    $"rui/menu/common/unlock_random",
-    $"rui/titan_loadout/passive/ion_entangled_energy",
-    $"rui/titan_loadout/passive/ion_zero_point_tripwire",
-    $"rui/titan_loadout/passive/ion_vortex_amp",
-    $"rui/titan_loadout/passive/ion_grand_canon",
-    $"rui/titan_loadout/passive/ion_diffraction_lens"
-  ]
-  ionKit.values = [
-    "undefined",
-    "ion_entangled_energy",
-    "ion_zero_point_tripwire",
-    "ion_vortex_amp",
-    "ion_grand_canon",
-    "ion_diffraction_lens"
-  ]
-  ion.kit0 = ionKit
-  ion.kit1 = titanKit
-  ion.kit2 = fallKit
+  TitanCategory stryder
+  stryder.displayName = "Stryder"
 
-  titan.titans.append(ion)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-
-  Titan scorch
-  scorch.name = "scorch"
-  scorch.image = $"rui/callsigns/callsign_fd_scorch_hard"
-  scorch.disabled = false
-  scorch.selectedKit0 = 0
-  scorch.selectedKit1 = 0
-  scorch.selectedKit2 = 0
-  ArrayAttribute scorchKit
-  scorchKit.images = [
-    $"rui/menu/common/unlock_random",
-    $"rui/titan_loadout/passive/scorch_wildfire_launcher",
-    $"rui/titan_loadout/passive/scorch_fuel",
-    $"rui/titan_loadout/passive/scorch_scorched_earth",
-    $"rui/titan_loadout/passive/scorch_inferno_shield",
-    $"rui/titan_loadout/passive/scorch_tempered_plating"
-  ]
-  scorchKit.values = [
-    "undefined",
-    "scorch_wildfire_launcher",
-    "scorch_fuel",
-    "scorch_scorched_earth",
-    "scorch_inferno_shield",
-    "scorch_tempered_plating"
-  ]
-  scorch.kit0 = scorchKit
-  scorch.kit1 = titanKit
-  scorch.kit2 = fallKit
-
-  titan.titans.append(scorch)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-  
   Titan northstar
   northstar.name = "northstar"
   northstar.image = $"rui/callsigns/callsign_fd_northstar_hard"
@@ -1303,9 +1418,7 @@ void function initTitan()
   northstar.kit0 = northstarKit
   northstar.kit1 = titanKit
   northstar.kit2 = fallKit
-
-  titan.titans.append(northstar)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+  stryder.titans.append(northstar)
 
   Titan ronin
   ronin.name = "ronin"
@@ -1335,8 +1448,43 @@ void function initTitan()
   ronin.kit1 = titanKit
   ronin.kit2 = fallKit
 
-  titan.titans.append(ronin)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+  stryder.titans.append(ronin)
+  titan.categories.append(stryder)
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+
+  TitanCategory atlas
+  atlas.displayName = "Atlas"
+
+  Titan ion
+  ion.name = "ion"
+  ion.image = $"rui/callsigns/callsign_fd_ion_hard"
+  ion.disabled = false
+  ion.selectedKit0 = 0
+  ion.selectedKit1 = 0
+  ion.selectedKit2 = 0
+  ArrayAttribute ionKit
+  ionKit.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/titan_loadout/passive/ion_entangled_energy",
+    $"rui/titan_loadout/passive/ion_zero_point_tripwire",
+    $"rui/titan_loadout/passive/ion_vortex_amp",
+    $"rui/titan_loadout/passive/ion_grand_canon",
+    $"rui/titan_loadout/passive/ion_diffraction_lens"
+  ]
+  ionKit.values = [
+    "undefined",
+    "ion_entangled_energy",
+    "ion_zero_point_tripwire",
+    "ion_vortex_amp",
+    "ion_grand_canon",
+    "ion_diffraction_lens"
+  ]
+  ion.kit0 = ionKit
+  ion.kit1 = titanKit
+  ion.kit2 = fallKit
+
+  atlas.titans.append(ion)
+
   Titan tone
   tone.name = "tone"
   tone.image = $"rui/callsigns/callsign_fd_tone_hard"
@@ -1365,38 +1513,8 @@ void function initTitan()
   tone.kit1 = titanKit
   tone.kit2 = fallKit
 
-  titan.titans.append(tone)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-  Titan legion
-  legion.name = "legion"
-  legion.image = $"rui/callsigns/callsign_fd_legion_hard"
-  legion.disabled = false
-  legion.selectedKit0 = 0
-  legion.selectedKit1 = 0
-  legion.selectedKit2 = 0
-  ArrayAttribute legionKit
-  legionKit.images = [
-    $"rui/menu/common/unlock_random",
-    $"rui/titan_loadout/passive/legion_enhanced_ammo",
-    $"rui/titan_loadout/passive/legion_sensor_array",
-    $"rui/titan_loadout/passive/legion_bulwark",
-    $"rui/titan_loadout/passive/legion_lightweight_alloys",
-    $"rui/titan_loadout/passive/legion_siege_mode"
-  ]
-  legionKit.values = [
-    "undefined",
-    "legion_enhanced_ammo",
-    "legion_sensor_array",
-    "legion_bulwark",
-    "legion_lightweight_alloys",
-    "legion_siege_mode"
-  ]
-  legion.kit0 = legionKit
-  legion.kit1 = titanKit
-  legion.kit2 = fallKit
+  atlas.titans.append(tone)
 
-  titan.titans.append(legion)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
   Titan monarch
   monarch.name = "monarch"
   monarch.image = $"rui/callsigns/callsign_fd_monarch_hard"
@@ -1423,7 +1541,7 @@ void function initTitan()
   monarch.kit1 = titanKit
   monarch.kit2 = fallKit
 
-  titan.titans.append(monarch)
+  atlas.titans.append(monarch)
 
   Titan monarchCores
   monarchCores.name = "monarchCores"
@@ -1475,12 +1593,87 @@ void function initTitan()
   monarchCores.kit1 = monarchCore1
   monarchCores.kit2 = monarchCore2
 
-  titan.titans.append(monarchCores)
+  atlas.titans.append(monarchCores)
+
+  titan.categories.append(atlas)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+  TitanCategory ogre
+  ogre.displayName = "Ogre"
+
+  Titan scorch
+  scorch.name = "scorch"
+  scorch.image = $"rui/callsigns/callsign_fd_scorch_hard"
+  scorch.disabled = false
+  scorch.selectedKit0 = 0
+  scorch.selectedKit1 = 0
+  scorch.selectedKit2 = 0
+  ArrayAttribute scorchKit
+  scorchKit.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/titan_loadout/passive/scorch_wildfire_launcher",
+    $"rui/titan_loadout/passive/scorch_fuel",
+    $"rui/titan_loadout/passive/scorch_scorched_earth",
+    $"rui/titan_loadout/passive/scorch_inferno_shield",
+    $"rui/titan_loadout/passive/scorch_tempered_plating"
+  ]
+  scorchKit.values = [
+    "undefined",
+    "scorch_wildfire_launcher",
+    "scorch_fuel",
+    "scorch_scorched_earth",
+    "scorch_inferno_shield",
+    "scorch_tempered_plating"
+  ]
+  scorch.kit0 = scorchKit
+  scorch.kit1 = titanKit
+  scorch.kit2 = fallKit
+
+  ogre.titans.append(scorch)
+  
+
+  Titan legion
+  legion.name = "legion"
+  legion.image = $"rui/callsigns/callsign_fd_legion_hard"
+  legion.disabled = false
+  legion.selectedKit0 = 0
+  legion.selectedKit1 = 0
+  legion.selectedKit2 = 0
+  ArrayAttribute legionKit
+  legionKit.images = [
+    $"rui/menu/common/unlock_random",
+    $"rui/titan_loadout/passive/legion_enhanced_ammo",
+    $"rui/titan_loadout/passive/legion_sensor_array",
+    $"rui/titan_loadout/passive/legion_bulwark",
+    $"rui/titan_loadout/passive/legion_lightweight_alloys",
+    $"rui/titan_loadout/passive/legion_siege_mode"
+  ]
+  legionKit.values = [
+    "undefined",
+    "legion_enhanced_ammo",
+    "legion_sensor_array",
+    "legion_bulwark",
+    "legion_lightweight_alloys",
+    "legion_siege_mode"
+  ]
+  legion.kit0 = legionKit
+  legion.kit1 = titanKit
+  legion.kit2 = fallKit
+
+  ogre.titans.append(legion)
+
+  titan.categories.append(ogre)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
-  reloadTitanScreen()
+  for(int i = 0; i < titan.buttons.len() ; i++) 
+  {
+    RHud_SetText( titan.buttons[i], Localize(titan.categories[i].displayName) )
+    AddButtonEventHandler( titan.buttons[i], UIE_CLICK, changeTitanDisplay )
+	}
 
   var rui = Hud_GetRui( Hud_GetChild( titan.loadoutDisplay, "TitanDetails" ) )
+
+  selectButton(titan.buttons, 1, 0)
+  changeTitanDisplay(titan.buttons[0])
 
 	RuiSetString( rui, "nameText", Localize("#MODE_SETTING_BAN_TITAN_LBL_TITLE") )
 	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_TITAN_LBL_TEXT") )

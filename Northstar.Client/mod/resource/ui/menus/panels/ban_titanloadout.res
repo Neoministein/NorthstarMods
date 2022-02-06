@@ -4,14 +4,61 @@
 	{
         ControlName				RuiPanel
         InheritProperties       RuiLoadoutLabel
+		xpos					200
         ypos                    78
 	}
 
-    TitanIon
+	ButtonStryder
+    {
+        ControlName				RuiButton
+        InheritProperties		RuiLoadoutSelectionButton
+		classname				BanTitanCategoryButton
+        scriptID				0
+        ypos                    78
+		xpos					-50
+
+        pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+        navUp					ButtonLast
+        navDown					Button1
+        tabPosition             1
+    }
+
+    ButtonAtlas
+    {
+        ControlName				RuiButton
+        InheritProperties		RuiLoadoutSelectionButton
+		classname				BanTitanCategoryButton
+        ypos                    8
+        scriptID				1
+
+        pin_to_sibling			ButtonStryder
+       	pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+        navUp					Button0
+        navDown					Button2
+    }
+
+    ButtonOgre
+    {
+        ControlName				RuiButton
+        InheritProperties		RuiLoadoutSelectionButton
+		classname				BanTitanCategoryButton
+        ypos                    8
+        scriptID				2
+
+        pin_to_sibling			ButtonAtlas
+        pin_corner_to_sibling	TOP_LEFT
+        pin_to_sibling_corner	BOTTOM_LEFT
+        navUp					Button1
+        navDown					Button3
+    }
+
+    Titan0
 	{
 		ControlName				CNestedPanel
 		classname 				titanDisplay
-		xpos					0
+		xpos					200
     	ypos                    0
 		zpos					10
 		wide					500
@@ -38,7 +85,7 @@
 		}
 	}
 
-    TitanSorch
+    Titan1
 	{
 		ControlName				CNestedPanel
 		classname 				titanDisplay
@@ -51,7 +98,7 @@
 
         
 		enabled                 0
-        pin_to_sibling			TitanIon
+        pin_to_sibling			Titan0
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
 		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
@@ -71,7 +118,7 @@
 		}
 	}
 
-    TitanNorthstar
+    Titan2
 	{
 		ControlName				CNestedPanel
 		classname 				titanDisplay
@@ -84,7 +131,7 @@
 
         
 		enabled                 0
-        pin_to_sibling			TitanSorch
+        pin_to_sibling			Titan1
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
 		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
@@ -104,18 +151,18 @@
 		}
 	}
 
-    TitanRonin
+    Titan3
 	{
 		ControlName				CNestedPanel
 		classname 				titanDisplay
-		xpos					650
-    	ypos                    0
+		xpos					230
+    	ypos                    -105
 		zpos					10
 		wide					500
 		tall					225
 		scriptID				3
 
-		enabled                 0
+		pin_to_sibling			Titan2
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
 		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
@@ -132,200 +179,6 @@
 			pin_to_sibling			TitanIon
 			pin_corner_to_sibling	TOP_LEFT
         	pin_to_sibling_corner	TOP_LEFT
-		}
-	}
-
-    TitanTone
-	{
-		ControlName				CNestedPanel
-		classname 				titanDisplay
-		xpos					0
-    	ypos                    -75
-		zpos					10
-		wide					500
-		tall					225
-		scriptID				4
-
-        
-		enabled                 0
-        pin_to_sibling			TitanRonin
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
-
-		ButtonFrame
-		{
-			ControlName				RuiPanel
-			ypos                    107
-			wide					223
-			tall					108
-			rui                     "ui/basic_image.rpak"
-			visible					1
-
-			pin_to_sibling			TitanIon
-			pin_corner_to_sibling	TOP_LEFT
-        	pin_to_sibling_corner	TOP_LEFT
-		}
-	} 
-
-    TitanLegion
-	{
-		ControlName				CNestedPanel
-		classname 				titanDisplay
-		xpos					0
-    	ypos                    -75
-		zpos					10
-		wide					500
-		tall					225
-		scriptID				5
-
-        
-		enabled                 0
-        pin_to_sibling			TitanTone
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
-
-		ButtonFrame
-		{
-			ControlName				RuiPanel
-			ypos                    107
-			wide					223
-			tall					108
-			rui                     "ui/basic_image.rpak"
-			visible					1
-
-			pin_to_sibling			TitanIon
-			pin_corner_to_sibling	TOP_LEFT
-        	pin_to_sibling_corner	TOP_LEFT
-		}
-	} 
-
-    TitanMonarch
-	{
-		ControlName				CNestedPanel
-		classname 				titanDisplay
-		xpos					0
-    	ypos                    -75
-		zpos					10
-		wide					500
-		tall					225
-		scriptID				6
-
-        
-		enabled                 0
-        pin_to_sibling			TitanNorthstar
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
-
-		ButtonFrame
-		{
-			ControlName				RuiPanel
-			ypos                    107
-			wide					223
-			tall					108
-			rui                     "ui/basic_image.rpak"
-			visible					1
-
-			pin_to_sibling			TitanIon
-			pin_corner_to_sibling	TOP_LEFT
-        	pin_to_sibling_corner	TOP_LEFT
-		}
-	}
-
-    TitanMonarch
-	{
-		ControlName				CNestedPanel
-		classname 				titanDisplay
-		xpos					0
-    	ypos                    -75
-		zpos					10
-		wide					500
-		tall					225
-		scriptID				6
-
-        
-		enabled                 0
-        pin_to_sibling			TitanNorthstar
-        pin_corner_to_sibling	TOP_LEFT
-        pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
-
-		ButtonFrame
-		{
-			ControlName				RuiPanel
-			ypos                    107
-			wide					223
-			tall					108
-			rui                     "ui/basic_image.rpak"
-			visible					1
-
-			pin_to_sibling			TitanIon
-			pin_corner_to_sibling	TOP_LEFT
-        	pin_to_sibling_corner	TOP_LEFT
-		}
-	}
-
-	TitanMonarchCores
-	{
-		ControlName				CNestedPanel
-		xpos					0
-    	ypos                    -225
-		zpos					10
-		wide					500
-		tall					225
-		scriptID				7
-
-        visible					1
-		enabled                 1
-        pin_to_sibling			TitanMonarch
-
-		CoreOne
-		{
-			ControlName				RuiButton
-			InheritProperties		RuiSmallButton
-			classname				MonarchCoreButton
-			scriptID				0
-			ypos					0
-			wide					225
-			tabPosition				1
-			visible					1
-			
-			pin_corner_to_sibling	TOP_LEFT
-			pin_to_sibling_corner	BOTTOM_LEFT
-		}
-
-		CoreTwo
-		{
-			ControlName				RuiButton
-			InheritProperties		RuiSmallButton
-			classname				MonarchCoreButton
-			scriptID				1
-			ypos					40
-			wide					225
-
-			tabPosition				1
-			visible					1
-			
-			pin_corner_to_sibling	TOP_LEFT
-			pin_to_sibling_corner	BOTTOM_LEFT
-		}
-
-		CoreThree
-		{
-			ControlName				RuiButton
-			InheritProperties		RuiSmallButton
-			classname				MonarchCoreButton
-			scriptID				2
-			ypos					80
-			wide					225
-
-			tabPosition				1
-			visible					1
-			
-			pin_corner_to_sibling	TOP_LEFT
-			pin_to_sibling_corner	BOTTOM_LEFT
 		}
 	}
 
