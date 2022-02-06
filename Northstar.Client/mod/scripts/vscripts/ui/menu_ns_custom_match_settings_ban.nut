@@ -10,73 +10,42 @@ struct ArrayAttribute {
     array<string> values
 }
 
+struct Loadout {
+    string name
+    asset image
+    bool disabled = false
+
+    int selectedAtr0 = 0
+    int selectedAtr1 = 0
+    int selectedAtr2 = 0
+
+    ArrayAttribute &atr0
+    ArrayAttribute &atr1 
+    ArrayAttribute &atr2
+}
+
+struct Category {
+    string displayName
+
+    array<Loadout> loadouts
+}
+
 struct PilotDisplay {
   var loadoutDisplay
 
   table<string ,BoolAttributte> attributes 
 } 
 
-struct Weapon {
-    string name
-    asset image
-    bool disabled = false
-
-    int selectedMod0 = 0
-    int selectedMod1 = 0
-    int selectedVisor = 0
-
-    ArrayAttribute &mod0
-    ArrayAttribute &mod1 
-    ArrayAttribute &visor
-}
-
-struct WeaponCategory {
-    string displayName
-
-    array<Weapon> weapons
-}
-
-struct WeaponDisplay {
-  int categorySelected = 1
-  int modTypeSelected = 1
-  int weaponSelected = 1
-
-  array<var> buttons = []
-  array<WeaponCategory> categories
-  array<var> weaponDisplays 
-  var loadoutDisplay
-} 
-
-struct Titan {
-    string name
-    asset image
-    bool disabled = false
-
-    int selectedKit0 = 0
-    int selectedKit1 = 0
-    int selectedKit2 = 0
-
-    ArrayAttribute &kit0
-    ArrayAttribute &kit1 
-    ArrayAttribute &kit2
-}
-
-struct TitanCategory {
-    string displayName
-
-    array<Titan> titans
-}
-
-struct TitanDisplay {
+struct LoadoutDisplay {
   var loadoutDisplay
 
   int categorySelected = 1
-  int selectedTitanAttribute
-  int selectedTitan
+  int selectedAttribute
+  int selectedLoadout
 
   array<var> buttons = []
-  array<TitanCategory> categories
-  array<var> titanDisplays 
+  array<Category> categories
+  array<var> displays 
 } 
 
 struct BoostDisplay {
@@ -84,7 +53,6 @@ struct BoostDisplay {
 
   table<string ,BoolAttributte> boosts 
 } 
-
 
 struct {
   var menu
@@ -95,8 +63,8 @@ struct {
   array<var> buttons = []
   array<var> loadoutDisplays = []
   PilotDisplay pilot
-  WeaponDisplay weapon
-  TitanDisplay titan
+  LoadoutDisplay weapon
+  LoadoutDisplay titan
   BoostDisplay boost
 } file
 
@@ -186,36 +154,26 @@ void function clickOpenSubMenu(var pressedButton) {
   int currentlySelected = 0
 
   //This defines the screen which calls this button so that weapons and titans can use the same logic
-  if (file.selected == 1) {
-    file.weapon.modTypeSelected = buttonSelected
-    file.weapon.weaponSelected = uiElementId
-
-    if (0 == buttonSelected) {
-      items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].mod0.images
-      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedMod0
-    } else if (1 == buttonSelected) {
-      items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].mod1.images
-      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedMod1
-    } else {
-      items = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].visor.images
-      currentlySelected = file.weapon.categories[file.weapon.categorySelected].weapons[uiElementId].selectedVisor
-    }
-  } else if (file.selected == 2) {
-    file.titan.selectedTitanAttribute = buttonSelected
-    file.titan.selectedTitan = uiElementId
-
-    if (0 == buttonSelected) {
-      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit0.images
-      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit0
-    } else if (1 == buttonSelected) {
-      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit1.images
-      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit1
-    } else {
-      items = file.titan.categories[file.titan.categorySelected].titans[uiElementId].kit2.images
-      currentlySelected = file.titan.categories[file.titan.categorySelected].titans[uiElementId].selectedKit2
-    }
+  LoadoutDisplay loadout
+  if (file.selected == 1) { 
+    loadout = file.weapon
+  } else if (file.selected == 2) { 
+    loadout = file.titan
   }
 
+  loadout.selectedAttribute = buttonSelected
+  loadout.selectedLoadout = uiElementId
+
+  if (0 == buttonSelected) {
+    items = loadout.categories[loadout.categorySelected].loadouts[uiElementId].atr0.images
+    currentlySelected = loadout.categories[loadout.categorySelected].loadouts[uiElementId].selectedAtr0
+  } else if (1 == buttonSelected) {
+    items = loadout.categories[loadout.categorySelected].loadouts[uiElementId].atr1.images
+    currentlySelected = loadout.categories[loadout.categorySelected].loadouts[uiElementId].selectedAtr1
+  } else {
+    items = loadout.categories[loadout.categorySelected].loadouts[uiElementId].atr2.images
+    currentlySelected = loadout.categories[loadout.categorySelected].loadouts[uiElementId].selectedAtr2
+  }
 	
 	int maxRowCount = 4
 	int numItems = items.len()
@@ -251,26 +209,22 @@ void function clickSelectInSubmenu(var pressedButton)
 {
   int modSelected = rearangeIntToButton(int(Hud_GetScriptID( pressedButton )))
 
+  LoadoutDisplay loadout
   //This defines the screen which calls this button so that weapons and titans can use the same logic
   if (file.selected == 1) {
-    if (0 == file.weapon.modTypeSelected) {
-      file.weapon.categories[file.weapon.categorySelected].weapons[file.weapon.weaponSelected].selectedMod0 = modSelected
-    } else if (1 == file.weapon.modTypeSelected) {
-      file.weapon.categories[file.weapon.categorySelected].weapons[file.weapon.weaponSelected].selectedMod1 = modSelected
-    } else {
-      file.weapon.categories[file.weapon.categorySelected].weapons[file.weapon.weaponSelected].selectedVisor = modSelected
-    }
-    loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
+    loadout = file.weapon
   } else {
-    if (0 == file.titan.selectedTitanAttribute) {
-      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit0 = modSelected
-    } else if (1 == file.titan.selectedTitanAttribute) {
-      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit1 = modSelected
-    } else {
-      file.titan.categories[file.titan.categorySelected].titans[file.titan.selectedTitan].selectedKit2 = modSelected
-    }
-    loadTitanCategory(file.titan.categories[file.titan.categorySelected])
+    loadout = file.titan
   }
+
+  if (0 == loadout.selectedAttribute) {
+    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr0 = modSelected
+  } else if (1 == file.weapon.selectedAttribute) {
+    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr1 = modSelected
+  } else {
+    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr2 = modSelected
+  }
+  reloadCurrentScreen()
   
   OnModSelectBGScreen_Activate(null)
 }
@@ -334,11 +288,11 @@ void function HideSubmenuBackgroundElems()
   array<var> elems
   if(file.selected == 1) 
   {
-    elems = GetElementsByClassname( file.menu, "HideWhenEditing_" + file.weapon.modTypeSelected )
-    subLoadout = file.weapon.weaponSelected
+    elems = GetElementsByClassname( file.menu, "HideWhenEditing_" + file.weapon.selectedAttribute )
+    subLoadout = file.weapon.selectedLoadout
   } else {
-    elems = GetElementsByClassname( file.menu, "HideWhenEditing_" + file.titan.selectedTitanAttribute )
-    subLoadout = file.titan.selectedTitan
+    elems = GetElementsByClassname( file.menu, "HideWhenEditing_" + file.titan.selectedAttribute )
+    subLoadout = file.titan.selectedLoadout
   }
 	foreach ( elem in elems ) {
     if(int(Hud_GetScriptID( Hud_GetParent( elem ) ) ) == subLoadout) {
@@ -426,13 +380,13 @@ void function callWeaponButtonClick(var pressedButton)
   bool state
   if(file.selected == 1) 
   {
-    state = !file.weapon.categories[file.weapon.categorySelected].weapons[id].disabled
-    file.weapon.categories[file.weapon.categorySelected].weapons[id].disabled = state
+    state = !file.weapon.categories[file.weapon.categorySelected].loadouts[id].disabled
+    file.weapon.categories[file.weapon.categorySelected].loadouts[id].disabled = state
   } 
   else 
   {
-    state = !file.titan.categories[file.titan.categorySelected].titans[id].disabled
-    file.titan.categories[file.titan.categorySelected].titans[id].disabled = state
+    state = !file.titan.categories[file.titan.categorySelected].loadouts[id].disabled
+    file.titan.categories[file.titan.categorySelected].loadouts[id].disabled = state
   } 
   Hud_SetSelected( pressedButton , state )
 }
@@ -464,45 +418,45 @@ void function changeWeaponDisplay( var pressedButton )
   }
 }
 
-void function loadWeaponCategory(WeaponCategory category) 
+void function loadWeaponCategory(Category category) 
 {
-  for(int i = 0; i < file.weapon.weaponDisplays.len();i++) {
-      if(i < category.weapons.len()) {
+  for(int i = 0; i < file.weapon.displays.len();i++) {
+      if(i < category.loadouts.len()) {
 
-        Hud_SetSelected( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" ) , category.weapons[i].disabled )
-
-        RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeapon" )), 
-          "buttonImage", 
-          category.weapons[i].image )
+        Hud_SetSelected( Hud_GetChild( file.weapon.displays[i], "ButtonWeapon" ) , category.loadouts[i].disabled )
 
         RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponMod0" )), 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeapon" )), 
           "buttonImage", 
-          category.weapons[i].mod0.images[category.weapons[i].selectedMod0] )
+          category.loadouts[i].image )
 
         RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponMod1" )), 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponMod0" )), 
           "buttonImage", 
-          category.weapons[i].mod1.images[category.weapons[i].selectedMod1] )     
+          category.loadouts[i].atr0.images[category.loadouts[i].selectedAtr0] )
 
-        if (category.weapons[i].visor.images.len() > 0) {
+        RuiSetImage( 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponMod1" )), 
+          "buttonImage", 
+          category.loadouts[i].atr1.images[category.loadouts[i].selectedAtr1] )     
+
+        if (category.loadouts[i].atr2.images.len() > 0) {
           RuiSetImage( 
-            Hud_GetRui( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" )), 
+            Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" )), 
             "buttonImage", 
-            category.weapons[i].visor.images[category.weapons[i].selectedVisor] )  
+            category.loadouts[i].atr2.images[category.loadouts[i].selectedAtr2] )  
 
-            Hud_SetVisible( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" ) , true )    
+            Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" ) , true )    
         } 
         else 
         {
-          Hud_SetVisible( Hud_GetChild( file.weapon.weaponDisplays[i], "ButtonWeaponSight" ) , false )
+          Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" ) , false )
         }
 
 
-        Hud_SetVisible( file.weapon.weaponDisplays[i] , true )
+        Hud_SetVisible( file.weapon.displays[i] , true )
       } else {
-        Hud_SetVisible( file.weapon.weaponDisplays[i] , false )
+        Hud_SetVisible( file.weapon.displays[i] , false )
       }
   }
 }
@@ -518,55 +472,55 @@ void function changeTitanDisplay( var pressedButton )
   }
 }
 
-void function loadTitanCategory(TitanCategory category) {
-  for(int i = 0; i < file.titan.titanDisplays.len();i++) {
-    if(i < category.titans.len()) {
+void function loadTitanCategory(Category category) {
+  for(int i = 0; i < file.titan.displays.len();i++) {
+    if(i < category.loadouts.len()) {
 
-      Hud_SetSelected( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , category.titans[i].disabled )
+      Hud_SetSelected( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , category.loadouts[i].disabled )
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" )), 
         "buttonImage", 
-        category.titans[i].image )
+        category.loadouts[i].image )
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame")),
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i] ,"ButtonFrame")),
         "basicImage", 
-        category.titans[i].image )  
+        category.loadouts[i].image )  
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod0" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponMod0" )), 
         "buttonImage", 
-        category.titans[i].kit0.images[category.titans[i].selectedKit0] )
+        category.loadouts[i].atr0.images[category.loadouts[i].selectedAtr0] )
 
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponMod1" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponMod1" )), 
         "buttonImage", 
-        category.titans[i].kit1.images[category.titans[i].selectedKit1] )     
+        category.loadouts[i].atr1.images[category.loadouts[i].selectedAtr1] )     
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeaponSight" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponSight" )), 
         "buttonImage", 
-        category.titans[i].kit2.images[category.titans[i].selectedKit2] )
+        category.loadouts[i].atr2.images[category.loadouts[i].selectedAtr2] )
 
       //Check if is Monarch Core Abilities
-      if(category.titans[i].name == "monarchCores") 
+      if(category.loadouts[i].name == "monarchCores") 
       {
-        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , false )
-        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame" ) , false ) 
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , false )
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i] ,"ButtonFrame" ) , false ) 
         
       } 
       else 
       {
-        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i], "ButtonWeapon" ) , true )
-        Hud_SetVisible( Hud_GetChild( file.titan.titanDisplays[i] ,"ButtonFrame" ) , true )   
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , true )
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i] ,"ButtonFrame" ) , true )   
       }  
 
-      Hud_SetVisible( file.titan.titanDisplays[i] , true )
+      Hud_SetVisible( file.titan.displays[i] , true )
       
     } else {
-      Hud_SetVisible( file.titan.titanDisplays[i] , false )
+      Hud_SetVisible( file.titan.displays[i] , false )
     }
   }
 }
@@ -598,28 +552,28 @@ void function setAllAttributes(bool enabled)
   //Weapon
   for(int i = 0; i < file.weapon.categories.len();i++) 
   {
-    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
     {
-      Weapon weapon = file.weapon.categories[i].weapons[j]
+      Loadout weapon = file.weapon.categories[i].loadouts[j]
       weapon.disabled = !enabled
       if(enabled) {
-        weapon.selectedMod0 = 0
-        weapon.selectedMod1 = 0
-        weapon.selectedVisor = 0
+        weapon.selectedAtr0 = 0
+        weapon.selectedAtr1 = 0
+        weapon.selectedAtr2 = 0
       }
     }
   }
   //Titan
   for(int i = 0; i < file.titan.categories.len(); i++) 
   {
-    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
     {
-      Titan titan = file.titan.categories[i].titans[j]
+      Loadout titan = file.titan.categories[i].loadouts[j]
       titan.disabled = !enabled
       if(enabled) {
-        titan.selectedKit0 = 0
-        titan.selectedKit1 = 0
-        titan.selectedKit2 = 0
+        titan.selectedAtr0 = 0
+        titan.selectedAtr1 = 0
+        titan.selectedAtr2 = 0
       }
     }
   }
@@ -646,33 +600,33 @@ void function exportConfigToString(var pressedButton)
   //Weapon
   for(int i = 0; i < file.weapon.categories.len();i++) 
   {
-    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
     {
-      Weapon weapon = file.weapon.categories[i].weapons[j]
+      Loadout weapon = file.weapon.categories[i].loadouts[j]
       if(weapon.disabled) {
         exportString += string(1)
       } else {
         exportString += string(0)
       }
-      exportString += string(weapon.selectedMod0)
-      exportString += string(weapon.selectedMod1)
-      exportString += string(weapon.selectedVisor)
+      exportString += string(weapon.selectedAtr0)
+      exportString += string(weapon.selectedAtr1)
+      exportString += string(weapon.selectedAtr2)
     }
   }
   //Titan
   for(int i = 0; i < file.titan.categories.len(); i++) 
   {
-    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
     {
-      Titan titan = file.titan.categories[i].titans[j]
+      Loadout titan = file.titan.categories[i].loadouts[j]
       if(titan.disabled) {
         exportString += string(1)
       } else {
         exportString += string(0)
       }
-      exportString += string(titan.selectedKit0)
-      exportString += string(titan.selectedKit1)
-      exportString += string(titan.selectedKit2)
+      exportString += string(titan.selectedAtr0)
+      exportString += string(titan.selectedAtr1)
+      exportString += string(titan.selectedAtr2)
     }
   }
   //Boost
@@ -730,9 +684,9 @@ void function importConfigToString(var pressedButton)
   //Weapon
   for(int i = 0; i < file.weapon.categories.len();i++) 
   {
-    for(int j = 0; j < file.weapon.categories[i].weapons.len(); j++) 
+    for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
     {
-      Weapon weapon = file.weapon.categories[i].weapons[j]
+      Loadout weapon = file.weapon.categories[i].loadouts[j]
 
       if(importArray[count++] == 1) {
         weapon.disabled = true
@@ -740,29 +694,27 @@ void function importConfigToString(var pressedButton)
         weapon.disabled = false
       }
 
-      weapon.selectedMod0 = importArray[count++]
-      weapon.selectedMod1 = importArray[count++]
-      weapon.selectedVisor = importArray[count++]
+      weapon.selectedAtr0 = importArray[count++]
+      weapon.selectedAtr1 = importArray[count++]
+      weapon.selectedAtr2 = importArray[count++]
     }
   }
   
   //Titan
   for(int i = 0; i < file.titan.categories.len(); i++) 
   {
-    for(int j = 0; j < file.titan.categories[i].titans.len(); j++) 
+    for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
     {
-      Titan titan = file.titan.categories[i].titans[j]
+      Loadout titan = file.titan.categories[i].loadouts[j]
       if(importArray[count++] == 1) {
         titan.disabled = true
       } else {
         titan.disabled = false
       }
 
-      print("Before" + titan.selectedKit0 + " " + titan.selectedKit1 + " " + titan.selectedKit2)
-      titan.selectedKit0 = importArray[count++]
-      titan.selectedKit1 = importArray[count++]
-      titan.selectedKit2 = importArray[count++]
-      print("After" + titan.selectedKit0 + " " + titan.selectedKit1 + " " + titan.selectedKit2)
+      titan.selectedAtr0 = importArray[count++]
+      titan.selectedAtr1 = importArray[count++]
+      titan.selectedAtr2 = importArray[count++]
     }
   }
   //Boost
@@ -828,9 +780,9 @@ BoolAttributte function createBoolAttributte( asset image)
 
 void function initWeapon() 
 {
-  WeaponDisplay weapon = file.weapon
+  LoadoutDisplay weapon = file.weapon
   weapon.loadoutDisplay = file.loadoutDisplays[1]
-  weapon.weaponDisplays = GetElementsByClassname( file.menu, "weaponDisplay")
+  weapon.displays = GetElementsByClassname( file.menu, "weaponDisplay")
 
   weapon.buttons = GetElementsByClassname( file.menu, "BanWeaponCategoryButton" )
 
@@ -855,7 +807,7 @@ void function initWeapon()
     "none"]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory ar
+  Category ar
   ar.displayName = "#MENU_TITLE_AR"
 
   ArrayAttribute arVisor
@@ -872,7 +824,7 @@ void function initWeapon()
     "hcog",
     "threat_scope"]
 
-  ar.weapons.append(createWeapon(
+  ar.loadouts.append(createWeapon(
     "r201",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_r102",
     defaultMod,
@@ -893,26 +845,26 @@ void function initWeapon()
         "hcog",
         "threat_scope"]   
     }  
-  ar.weapons.append(createWeapon(
+  ar.loadouts.append(createWeapon(
     "r101",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_r101_aog",
     defaultMod,
     defaultMod,
     r101Visor
     ))
-  ar.weapons.append(createWeapon(
+  ar.loadouts.append(createWeapon(
     "hemlok",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_hemlok",
     defaultMod,
     defaultMod,
     arVisor))
-  ar.weapons.append(createWeapon(
+  ar.loadouts.append(createWeapon(
     "g2",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_g2a5",
     defaultMod,
     defaultMod,
     arVisor))
-  ar.weapons.append(createWeapon(
+  ar.loadouts.append(createWeapon(
     "flatline",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_vinson",
     defaultMod,
@@ -921,7 +873,7 @@ void function initWeapon()
 
   weapon.categories.append(ar)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory smg
+  Category smg
   smg.displayName = "#MENU_TITLE_SMG"
 
   ArrayAttribute smgVisor
@@ -938,28 +890,28 @@ void function initWeapon()
     "holosight",
     "threat_scope"]
 
-  smg.weapons.append(createWeapon(
+  smg.loadouts.append(createWeapon(
     "car",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_car",
     defaultMod,
     defaultMod,
     smgVisor))  
 
-  smg.weapons.append(createWeapon(
+  smg.loadouts.append(createWeapon(
     "alternator",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_alternator",
     defaultMod,
     defaultMod,
     arVisor))
 
-  smg.weapons.append(createWeapon(
+  smg.loadouts.append(createWeapon(
     "volt",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_volt",
     defaultMod,
     defaultMod,
     smgVisor))     
 
-  smg.weapons.append(createWeapon(
+  smg.loadouts.append(createWeapon(
     "r97",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_r97n",
     defaultMod,
@@ -968,7 +920,7 @@ void function initWeapon()
 
   weapon.categories.append(smg)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory lmg
+  Category lmg
   lmg.displayName = "#MENU_TITLE_LMG"
 
   ArrayAttribute lmgVisor
@@ -985,21 +937,21 @@ void function initWeapon()
     "aog",
     "threat_scope"]
 
-  lmg.weapons.append(createWeapon(
+  lmg.loadouts.append(createWeapon(
     "spitfire",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_spitfire",
     defaultMod,
     defaultMod,
     lmgVisor))   
 
-  lmg.weapons.append(createWeapon(
+  lmg.loadouts.append(createWeapon(
     "lstar",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_lstar",
     defaultMod,
     defaultMod,
     lmgVisor))  
 
-  lmg.weapons.append(createWeapon(
+  lmg.loadouts.append(createWeapon(
     "devotion",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_esaw",
     defaultMod,
@@ -1008,7 +960,7 @@ void function initWeapon()
 
   weapon.categories.append(lmg)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory sniper
+  Category sniper
   sniper.displayName = "#MENU_TITLE_SNIPER"
 
   ArrayAttribute sniperViser
@@ -1073,40 +1025,40 @@ void function initWeapon()
     "tactikill",
     "none"]    
 
-  sniper.weapons.append(createWeapon(
+  sniper.loadouts.append(createWeapon(
     "kraber",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_kraber",
     sniperModOne,
     sniperModOne,
     sniperViser))   
 
-  sniper.weapons.append(createWeapon(
+  sniper.loadouts.append(createWeapon(
     "doubletake",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_doubletake",
     sniperModOne,
     sniperModOne,
     takeViser))
 
-  sniper.weapons.append(createWeapon(
+  sniper.loadouts.append(createWeapon(
     "dmr",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_longbow",
     sniperModTwo,
     sniperModTwo,
     sniperViser)) 
-  //Sniper don't have run and gun
+  
   weapon.categories.append(sniper)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory shotgun
+  Category shotgun
   shotgun.displayName = "#MENU_TITLE_SHOTGUN"
 
-  shotgun.weapons.append(createWeapon(
+  shotgun.loadouts.append(createWeapon(
     "eva",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_eva8",
     defaultMod,
     defaultMod,
     smgVisor)) 
 
-  shotgun.weapons.append(createWeapon(
+  shotgun.loadouts.append(createWeapon(
     "mastiff",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_mastiff",
     defaultMod,
@@ -1115,28 +1067,28 @@ void function initWeapon()
   
   weapon.categories.append(shotgun)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory grenadier
+  Category grenadier
   grenadier.displayName = "#MENU_TITLE_GRENADIER"
 
-  grenadier.weapons.append(createWeaponNoVisor(
+  grenadier.loadouts.append(createWeaponNoVisor(
     "smr",
     $"r2_ui/menus/loadout_icons/anti_titan/at_sidewinder",
     defaultMod,
     defaultMod)) 
 
-  grenadier.weapons.append(createWeaponNoVisor(
+  grenadier.loadouts.append(createWeaponNoVisor(
     "epg",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_epg1",
     defaultMod,
     defaultMod)) 
 
-  grenadier.weapons.append(createWeaponNoVisor(
+  grenadier.loadouts.append(createWeaponNoVisor(
     "softball",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_softball",
     defaultMod,
     defaultMod)) 
 
-  grenadier.weapons.append(createWeaponNoVisor(
+  grenadier.loadouts.append(createWeaponNoVisor(
     "coldwar",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_coldwar",
     defaultMod,
@@ -1144,7 +1096,7 @@ void function initWeapon()
 
   weapon.categories.append(grenadier)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory handgun
+  Category handgun
   handgun.displayName = "#MENU_TITLE_HANDGUN"
 
   ArrayAttribute handgunMod
@@ -1187,31 +1139,31 @@ void function initWeapon()
     "tactikill",
     "none"]
 
-  handgun.weapons.append(createWeaponNoVisor(
+  handgun.loadouts.append(createWeaponNoVisor(
     "wingman_elite",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_wingman_elite",
     wingmanMod,
     wingmanMod)) 
 
-  handgun.weapons.append(createWeaponNoVisor(
+  handgun.loadouts.append(createWeaponNoVisor(
     "mozambique",
     $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_mozambique",
     handgunMod,
     handgunMod)) 
 
-  handgun.weapons.append(createWeaponNoVisor(
+  handgun.loadouts.append(createWeaponNoVisor(
     "re45",
     $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_autopistol",
     handgunMod,
     handgunMod)) 
 
-  handgun.weapons.append(createWeaponNoVisor(
+  handgun.loadouts.append(createWeaponNoVisor(
     "p2016",
     $"r2_ui/menus/loadout_icons/secondary_weapon/secondary_hammondp2011",
     handgunMod,
     handgunMod)) 
 
-  handgun.weapons.append(createWeaponNoVisor(
+  handgun.loadouts.append(createWeaponNoVisor(
     "b3",
     $"r2_ui/menus/loadout_icons/primary_weapon/primary_wingman_m",
     handgunMod,
@@ -1219,7 +1171,7 @@ void function initWeapon()
 
   weapon.categories.append(handgun)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  WeaponCategory antiTitan
+  Category antiTitan
   antiTitan.displayName = "#MENU_TITLE_ANTI_TITAN"
 
   ArrayAttribute antiTitanMod
@@ -1254,25 +1206,25 @@ void function initWeapon()
     "gun_ready",
     "none"]
 
-  antiTitan.weapons.append(createWeaponNoVisor(
+  antiTitan.loadouts.append(createWeaponNoVisor(
     "chargerifle",
     $"r2_ui/menus/loadout_icons/anti_titan/at_defenderc",
     chargerifleMod,
     chargerifleMod)) 
 
-  antiTitan.weapons.append(createWeaponNoVisor(
+  antiTitan.loadouts.append(createWeaponNoVisor(
     "mgl",
     $"r2_ui/menus/loadout_icons/anti_titan/at_mgl",
     antiTitanMod,
     antiTitanMod))  
 
-  antiTitan.weapons.append(createWeaponNoVisor(
+  antiTitan.loadouts.append(createWeaponNoVisor(
     "thunderbolt",
     $"r2_ui/menus/loadout_icons/anti_titan/at_arcball",
     antiTitanMod,
     antiTitanMod)) 
 
-  antiTitan.weapons.append(createWeaponNoVisor(
+  antiTitan.loadouts.append(createWeaponNoVisor(
     "archer",
     $"r2_ui/menus/loadout_icons/anti_titan/at_archer",
     antiTitanMod,
@@ -1310,43 +1262,43 @@ void function initWeapon()
 	RuiSetString( rui, "descText", Localize("#MODE_SETTING_BAN_WEAPON_LBL_TEXT") )
 }
 
-Weapon function createWeapon(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1, ArrayAttribute visor) 
+Loadout function createWeapon(string name, asset image, ArrayAttribute atr0, ArrayAttribute atr1, ArrayAttribute atr2) 
 {
-  Weapon weapon
+  Loadout weapon
   weapon.image = image
   weapon.disabled = false
-  weapon.selectedMod0 = 0
-  weapon.selectedMod1 = 0
-  weapon.selectedVisor = 0
+  weapon.selectedAtr0 = 0
+  weapon.selectedAtr1 = 0
+  weapon.selectedAtr2 = 0
   weapon.name = name
-  weapon.mod0 = mod0
-  weapon.mod1 = mod1
-  weapon.visor = visor
+  weapon.atr0 = atr0
+  weapon.atr1 = atr1
+  weapon.atr2 = atr2
 
   return weapon
 }
 
-Weapon function createWeaponNoVisor(string name, asset image, ArrayAttribute mod0, ArrayAttribute mod1) 
+Loadout function createWeaponNoVisor(string name, asset image, ArrayAttribute atr0, ArrayAttribute atr1) 
 {
   ArrayAttribute visor 
 
-  Weapon weapon
+  Loadout weapon
   weapon.image = image
   weapon.disabled = false
-  weapon.selectedMod0 = 0
-  weapon.selectedMod1 = 0
-  weapon.selectedVisor = 0
+  weapon.selectedAtr0 = 0
+  weapon.selectedAtr1 = 0
+  weapon.selectedAtr2 = 0
   weapon.name = name
-  weapon.mod0 = mod0
-  weapon.mod1 = mod1
-  weapon.visor = visor
+  weapon.atr0 = atr0
+  weapon.atr1 = atr1
+  weapon.atr2 = visor
 
   return weapon
 }
 
 void function initTitan() 
 {
-  TitanDisplay titan = file.titan
+  LoadoutDisplay titan = file.titan
 
   titan.loadoutDisplay = file.loadoutDisplays[2]
 
@@ -1355,7 +1307,7 @@ void function initTitan()
 
   titan.buttons = GetElementsByClassname( file.menu, "BanTitanCategoryButton" )  
 
-  titan.titanDisplays = GetElementsByClassname( file.menu, "titanDisplay")
+  titan.displays = GetElementsByClassname( file.menu, "titanDisplay")
 
   ArrayAttribute fallKit
   fallKit.images = [
@@ -1388,16 +1340,16 @@ void function initTitan()
   ]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-  TitanCategory stryder
+  Category stryder
   stryder.displayName = "Stryder"
 
-  Titan northstar
+  Loadout northstar
   northstar.name = "northstar"
   northstar.image = $"rui/callsigns/callsign_fd_northstar_hard"
   northstar.disabled = false
-  northstar.selectedKit0 = 0
-  northstar.selectedKit1 = 0
-  northstar.selectedKit2 = 0
+  northstar.selectedAtr0 = 0
+  northstar.selectedAtr1 = 0
+  northstar.selectedAtr2 = 0
   ArrayAttribute northstarKit
   northstarKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1415,18 +1367,18 @@ void function initTitan()
     "northstar_viper_thrusters",
     "northstar_threat_optics"
   ]
-  northstar.kit0 = northstarKit
-  northstar.kit1 = titanKit
-  northstar.kit2 = fallKit
-  stryder.titans.append(northstar)
+  northstar.atr0 = northstarKit
+  northstar.atr1 = titanKit
+  northstar.atr2 = fallKit
+  stryder.loadouts.append(northstar)
 
-  Titan ronin
+  Loadout ronin
   ronin.name = "ronin"
   ronin.image = $"rui/callsigns/callsign_fd_ronin_hard"
   ronin.disabled = false
-  ronin.selectedKit0 = 0
-  ronin.selectedKit1 = 0
-  ronin.selectedKit2 = 0
+  ronin.selectedAtr0 = 0
+  ronin.selectedAtr1 = 0
+  ronin.selectedAtr2 = 0
   ArrayAttribute roninKit
   roninKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1444,24 +1396,24 @@ void function initTitan()
     "ronin_highlander",
     "ronin_auto_shift"
   ]
-  ronin.kit0 = roninKit
-  ronin.kit1 = titanKit
-  ronin.kit2 = fallKit
+  ronin.atr0 = roninKit
+  ronin.atr1 = titanKit
+  ronin.atr2 = fallKit
 
-  stryder.titans.append(ronin)
+  stryder.loadouts.append(ronin)
   titan.categories.append(stryder)
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
-  TitanCategory atlas
+  Category atlas
   atlas.displayName = "Atlas"
 
-  Titan ion
+  Loadout ion
   ion.name = "ion"
   ion.image = $"rui/callsigns/callsign_fd_ion_hard"
   ion.disabled = false
-  ion.selectedKit0 = 0
-  ion.selectedKit1 = 0
-  ion.selectedKit2 = 0
+  ion.selectedAtr0 = 0
+  ion.selectedAtr1 = 0
+  ion.selectedAtr2 = 0
   ArrayAttribute ionKit
   ionKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1479,19 +1431,19 @@ void function initTitan()
     "ion_grand_canon",
     "ion_diffraction_lens"
   ]
-  ion.kit0 = ionKit
-  ion.kit1 = titanKit
-  ion.kit2 = fallKit
+  ion.atr0 = ionKit
+  ion.atr1 = titanKit
+  ion.atr2 = fallKit
 
-  atlas.titans.append(ion)
+  atlas.loadouts.append(ion)
 
-  Titan tone
+  Loadout tone
   tone.name = "tone"
   tone.image = $"rui/callsigns/callsign_fd_tone_hard"
   tone.disabled = false
-  tone.selectedKit0 = 0
-  tone.selectedKit1 = 0
-  tone.selectedKit2 = 0
+  tone.selectedAtr0 = 0
+  tone.selectedAtr1 = 0
+  tone.selectedAtr2 = 0
   ArrayAttribute toneKit
   toneKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1509,19 +1461,19 @@ void function initTitan()
     "tone_rocket_barrage",
     "tone_40mm_burst"
   ]
-  tone.kit0 = toneKit
-  tone.kit1 = titanKit
-  tone.kit2 = fallKit
+  tone.atr0 = toneKit
+  tone.atr1 = titanKit
+  tone.atr2 = fallKit
 
-  atlas.titans.append(tone)
+  atlas.loadouts.append(tone)
 
-  Titan monarch
+  Loadout monarch
   monarch.name = "monarch"
   monarch.image = $"rui/callsigns/callsign_fd_monarch_hard"
   monarch.disabled = false
-  monarch.selectedKit0 = 0
-  monarch.selectedKit1 = 0
-  monarch.selectedKit2 = 0
+  monarch.selectedAtr0 = 0
+  monarch.selectedAtr1 = 0
+  monarch.selectedAtr2 = 0
   ArrayAttribute monarchKit
   monarchKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1537,19 +1489,19 @@ void function initTitan()
     "vanguard_survivor",
     "vanguard_rearm"
   ]
-  monarch.kit0 = monarchKit
-  monarch.kit1 = titanKit
-  monarch.kit2 = fallKit
+  monarch.atr0 = monarchKit
+  monarch.atr1 = titanKit
+  monarch.atr2 = fallKit
 
-  atlas.titans.append(monarch)
+  atlas.loadouts.append(monarch)
 
-  Titan monarchCores
+  Loadout monarchCores
   monarchCores.name = "monarchCores"
   monarchCores.image = $"rui/callsigns/callsign_fd_monarch_hard"
   monarchCores.disabled = false
-  monarchCores.selectedKit0 = 0
-  monarchCores.selectedKit1 = 0
-  monarchCores.selectedKit2 = 0
+  monarchCores.selectedAtr0 = 0
+  monarchCores.selectedAtr1 = 0
+  monarchCores.selectedAtr2 = 0
   ArrayAttribute monarchCore0
   monarchCore0.images = [
     $"rui/menu/common/unlock_random",
@@ -1589,24 +1541,24 @@ void function initTitan()
     "monarch_core_superior_chassis",
     "monarch_core_xo16"
   ]
-  monarchCores.kit0 = monarchCore0
-  monarchCores.kit1 = monarchCore1
-  monarchCores.kit2 = monarchCore2
+  monarchCores.atr0 = monarchCore0
+  monarchCores.atr1 = monarchCore1
+  monarchCores.atr2 = monarchCore2
 
-  atlas.titans.append(monarchCores)
+  atlas.loadouts.append(monarchCores)
 
   titan.categories.append(atlas)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-  TitanCategory ogre
+  Category ogre
   ogre.displayName = "Ogre"
 
-  Titan scorch
+  Loadout scorch
   scorch.name = "scorch"
   scorch.image = $"rui/callsigns/callsign_fd_scorch_hard"
   scorch.disabled = false
-  scorch.selectedKit0 = 0
-  scorch.selectedKit1 = 0
-  scorch.selectedKit2 = 0
+  scorch.selectedAtr0 = 0
+  scorch.selectedAtr1 = 0
+  scorch.selectedAtr2 = 0
   ArrayAttribute scorchKit
   scorchKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1624,20 +1576,20 @@ void function initTitan()
     "scorch_inferno_shield",
     "scorch_tempered_plating"
   ]
-  scorch.kit0 = scorchKit
-  scorch.kit1 = titanKit
-  scorch.kit2 = fallKit
+  scorch.atr0 = scorchKit
+  scorch.atr1 = titanKit
+  scorch.atr2 = fallKit
 
-  ogre.titans.append(scorch)
+  ogre.loadouts.append(scorch)
   
 
-  Titan legion
+  Loadout legion
   legion.name = "legion"
   legion.image = $"rui/callsigns/callsign_fd_legion_hard"
   legion.disabled = false
-  legion.selectedKit0 = 0
-  legion.selectedKit1 = 0
-  legion.selectedKit2 = 0
+  legion.selectedAtr0 = 0
+  legion.selectedAtr1 = 0
+  legion.selectedAtr2 = 0
   ArrayAttribute legionKit
   legionKit.images = [
     $"rui/menu/common/unlock_random",
@@ -1655,11 +1607,11 @@ void function initTitan()
     "legion_lightweight_alloys",
     "legion_siege_mode"
   ]
-  legion.kit0 = legionKit
-  legion.kit1 = titanKit
-  legion.kit2 = fallKit
+  legion.atr0 = legionKit
+  legion.atr1 = titanKit
+  legion.atr2 = fallKit
 
-  ogre.titans.append(legion)
+  ogre.loadouts.append(legion)
 
   titan.categories.append(ogre)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
