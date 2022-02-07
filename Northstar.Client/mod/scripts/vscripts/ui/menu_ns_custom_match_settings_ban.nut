@@ -218,11 +218,11 @@ void function clickSelectInSubmenu(var pressedButton)
   }
 
   if (0 == loadout.selectedAttribute) {
-    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr0 = modSelected
-  } else if (1 == file.weapon.selectedAttribute) {
-    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr1 = modSelected
+    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr0 = modSelected
+  } else if (1 == loadout.selectedAttribute) {
+    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr1 = modSelected
   } else {
-    loadout.categories[file.weapon.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr2 = modSelected
+    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr2 = modSelected
   }
   reloadCurrentScreen()
   
@@ -529,7 +529,6 @@ void function reloadBoostScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
   {
-    print(file.boost.boosts[Hud_GetScriptID(button)].disabled)
      Hud_SetSelected( button , file.boost.boosts[Hud_GetScriptID(button)].disabled )
   }
 }
@@ -693,10 +692,13 @@ void function importConfigToString(var pressedButton)
       } else {
         weapon.disabled = false
       }
-
-      weapon.selectedAtr0 = importArray[count++]
-      weapon.selectedAtr1 = importArray[count++]
-      weapon.selectedAtr2 = importArray[count++]
+    
+      weapon.selectedAtr0 = ( importArray[count] < weapon.atr0.values.len() ? importArray[count] : 0 )
+      count++
+      weapon.selectedAtr1 = ( importArray[count] < weapon.atr1.values.len() ? importArray[count] : 0 )
+      count++
+      weapon.selectedAtr2 =  ( importArray[count] < weapon.atr2.values.len() ? importArray[count] : 0 )
+      count++
     }
   }
   
@@ -712,15 +714,17 @@ void function importConfigToString(var pressedButton)
         titan.disabled = false
       }
 
-      titan.selectedAtr0 = importArray[count++]
-      titan.selectedAtr1 = importArray[count++]
-      titan.selectedAtr2 = importArray[count++]
+      titan.selectedAtr0 = ( importArray[count] < titan.atr0.values.len() ? importArray[count] : 0 )
+      count++
+      titan.selectedAtr1 = ( importArray[count] < titan.atr1.values.len() ? importArray[count] : 0 )
+      count++
+      titan.selectedAtr2 = ( importArray[count] < titan.atr2.values.len() ? importArray[count] : 0 )
+      count++
     }
   }
   //Boost
   foreach(BoolAttributte attribute in file.boost.boosts)
   {
-    print(importArray[count])
     if(importArray[count++] == 1) {
       attribute.disabled = true
     } else {
