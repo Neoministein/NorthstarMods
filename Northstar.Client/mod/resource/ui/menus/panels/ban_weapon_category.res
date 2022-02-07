@@ -131,7 +131,7 @@
 			scriptID				0
 		    visible					1
 		    enabled                 0
-		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		    controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 	    }
 
 		Weapon1
@@ -147,7 +147,7 @@
 			scriptID				1
 		    visible					1
 		    enabled                 0
-		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		    controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 	    } 
 
 		Weapon2
@@ -163,7 +163,7 @@
 			scriptID				2
 		    visible					1
 		    enabled                 0
-		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		    controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 	    } 
 
 		Weapon3
@@ -179,7 +179,7 @@
 			scriptID				3
 		    visible					1
 		    enabled                 0
-		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		    controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 	    } 
 
 		Weapon4
@@ -195,7 +195,7 @@
 			scriptID				4
 		    visible					1
 		    enabled                 0
-		    controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		    controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 	    }
 
  	WeaponDetails

@@ -1,19 +1,19 @@
-"resource/ui/menus/panels/ban_weaponloadout.res"
+"resource/ui/menus/panels/ban_loadout.res"
 {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	WeaponName
+	Name
 	{
         ControlName				RuiPanel
         InheritProperties       RuiLoadoutLabel
         ypos                    78
 	}
 
-    ButtonWeapon
+    ButtonMain
     {
 		ControlName				RuiButton
 		InheritProperties		SuitButton
-        classname				WeaponLoadoutPanelButtonClass
+        classname				LoadoutPanelButtonClass
         scriptID				1
         tabPosition				1
 
@@ -22,12 +22,12 @@
         navLeft                 ButtonGender
         navRight                ButtonOrdnance
 
-        pin_to_sibling			WeaponName
+        pin_to_sibling			Name
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
     }
 
-    ButtonWeaponMod0
+    ButtonAtr0
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
@@ -40,12 +40,12 @@
         navLeft 				ButtonPrimary
         navRight 				ButtonPrimaryMod2
 
-        pin_to_sibling			ButtonWeapon
+        pin_to_sibling			ButtonMain
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	TOP_RIGHT
     }
 
-    ButtonWeaponMod1
+    ButtonAtr1
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
@@ -58,12 +58,12 @@
         navLeft 				ButtonPrimaryMod1
         navRight 				ButtonPrimarySight
 
-        pin_to_sibling			ButtonWeaponMod0
+        pin_to_sibling			ButtonAtr0
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	TOP_RIGHT
     }
 
-    ButtonWeaponSight
+    ButtonAtr2
     {
         ControlName				RuiButton
         InheritProperties		LoadoutButtonSmall
@@ -76,13 +76,13 @@
         navLeft 				ButtonPrimaryMod2
         navRight 				ButtonPrimaryMod3
 
-        pin_to_sibling			ButtonWeaponMod1
+        pin_to_sibling			ButtonAtr1
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	TOP_RIGHT
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ModDisplay
+    SubDisplay
 	{
 		 ControlName				CNestedPanel
 		 xpos					450

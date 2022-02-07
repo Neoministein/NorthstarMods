@@ -77,6 +77,8 @@ void function AddNorthstarCustomMatchSettingsBanMenu()
 void function InitNorthstarCustomMatchSettingsBanMenu()
 {
   file.menu = GetMenu( "CustomMatchBanSettingsMenu" )
+  AddMenuEventHandler( file.menu, eUIEvent.MENU_OPEN, OnMenu_Open )
+
   AddMenuFooterOption( file.menu, BUTTON_B, "#B_BUTTON_BACK", "#BACK" )
   AddMenuFooterOption(file.menu, BUTTON_A, "#A_RESTORE_DEFAULTS", "#RESTORE_DEFAULTS", callRestoreDefaults )
   AddMenuFooterOption(file.menu, BUTTON_Y, "#Y_BAN_ALL", "#BAN_ALL", callBanAll )
@@ -105,6 +107,11 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
     AddButtonEventHandler( button, UIE_CLICK, callChangeMainDisplay )
     Hud_SetVisible( button, true)
 	}
+}
+
+void function OnMenu_Open() 
+{
+  //TODO Call server to get ban data
 }
 
 void function InitCustomSelectMenu()
@@ -423,34 +430,34 @@ void function loadWeaponCategory(Category category)
   for(int i = 0; i < file.weapon.displays.len();i++) {
       if(i < category.loadouts.len()) {
 
-        Hud_SetSelected( Hud_GetChild( file.weapon.displays[i], "ButtonWeapon" ) , category.loadouts[i].disabled )
+        Hud_SetSelected( Hud_GetChild( file.weapon.displays[i], "ButtonMain" ) , category.loadouts[i].disabled )
 
         RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeapon" )), 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonMain" )), 
           "buttonImage", 
           category.loadouts[i].image )
 
         RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponMod0" )), 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonAtr0" )), 
           "buttonImage", 
           category.loadouts[i].atr0.images[category.loadouts[i].selectedAtr0] )
 
         RuiSetImage( 
-          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponMod1" )), 
+          Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonAtr1" )), 
           "buttonImage", 
           category.loadouts[i].atr1.images[category.loadouts[i].selectedAtr1] )     
 
         if (category.loadouts[i].atr2.images.len() > 0) {
           RuiSetImage( 
-            Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" )), 
+            Hud_GetRui( Hud_GetChild( file.weapon.displays[i], "ButtonAtr2" )), 
             "buttonImage", 
             category.loadouts[i].atr2.images[category.loadouts[i].selectedAtr2] )  
 
-            Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" ) , true )    
+            Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonAtr2" ) , true )    
         } 
         else 
         {
-          Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonWeaponSight" ) , false )
+          Hud_SetVisible( Hud_GetChild( file.weapon.displays[i], "ButtonAtr2" ) , false )
         }
 
 
@@ -476,10 +483,10 @@ void function loadTitanCategory(Category category) {
   for(int i = 0; i < file.titan.displays.len();i++) {
     if(i < category.loadouts.len()) {
 
-      Hud_SetSelected( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , category.loadouts[i].disabled )
+      Hud_SetSelected( Hud_GetChild( file.titan.displays[i], "ButtonMain" ) , category.loadouts[i].disabled )
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonMain" )), 
         "buttonImage", 
         category.loadouts[i].image )
 
@@ -489,31 +496,31 @@ void function loadTitanCategory(Category category) {
         category.loadouts[i].image )  
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponMod0" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonAtr0" )), 
         "buttonImage", 
         category.loadouts[i].atr0.images[category.loadouts[i].selectedAtr0] )
 
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponMod1" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonAtr1" )), 
         "buttonImage", 
         category.loadouts[i].atr1.images[category.loadouts[i].selectedAtr1] )     
 
       RuiSetImage( 
-        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonWeaponSight" )), 
+        Hud_GetRui( Hud_GetChild( file.titan.displays[i], "ButtonAtr2" )), 
         "buttonImage", 
         category.loadouts[i].atr2.images[category.loadouts[i].selectedAtr2] )
 
       //Check if is Monarch Core Abilities
       if(category.loadouts[i].name == "monarchCores") 
       {
-        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , false )
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonMain" ) , false )
         Hud_SetVisible( Hud_GetChild( file.titan.displays[i] ,"ButtonFrame" ) , false ) 
         
       } 
       else 
       {
-        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonWeapon" ) , true )
+        Hud_SetVisible( Hud_GetChild( file.titan.displays[i], "ButtonMain" ) , true )
         Hud_SetVisible( Hud_GetChild( file.titan.displays[i] ,"ButtonFrame" ) , true )   
       }  
 
@@ -1243,7 +1250,7 @@ void function initWeapon()
     AddButtonEventHandler( weapon.buttons[i], UIE_CLICK, changeWeaponDisplay )
 	}
 
-  array<var> weaponButton = GetElementsByClassname( file.menu, "WeaponLoadoutPanelButtonClass" )
+  array<var> weaponButton = GetElementsByClassname( file.menu, "LoadoutPanelButtonClass" )
 
   for(int i = 0; i < weaponButton.len(); i++) {
     AddButtonEventHandler( weaponButton[i], UIE_CLICK, callWeaponButtonClick )

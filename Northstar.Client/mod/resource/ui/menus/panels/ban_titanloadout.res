@@ -68,7 +68,7 @@
 		enabled                 0
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 
 		ButtonFrame
 		{
@@ -101,7 +101,7 @@
         pin_to_sibling			Titan0
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 
 		ButtonFrame
 		{
@@ -134,7 +134,7 @@
         pin_to_sibling			Titan1
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 
 		ButtonFrame
 		{
@@ -165,7 +165,7 @@
 		pin_to_sibling			Titan2
         pin_corner_to_sibling	TOP_LEFT
         pin_to_sibling_corner	BOTTOM_LEFT
-		controlSettingsFile		"resource/ui/menus/panels/ban_weaponloadout.res"
+		controlSettingsFile		"resource/ui/menus/panels/ban_loadout.res"
 
 		ButtonFrame
 		{
