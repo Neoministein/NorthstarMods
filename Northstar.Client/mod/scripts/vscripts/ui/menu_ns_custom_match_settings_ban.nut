@@ -1,4 +1,5 @@
 global function AddNorthstarCustomMatchSettingsBanMenu
+global function OnMenu_Open
 
 struct BoolAttributte {
   bool disabled = false
@@ -76,6 +77,8 @@ void function AddNorthstarCustomMatchSettingsBanMenu()
 
 void function InitNorthstarCustomMatchSettingsBanMenu()
 {
+  AddCustomMenuCategory("#BAN_PAGE" , "CustomMatchBanSettingsMenu")
+  
   file.menu = GetMenu( "CustomMatchBanSettingsMenu" )
   AddMenuEventHandler( file.menu, eUIEvent.MENU_OPEN, OnMenu_Open )
 
@@ -111,7 +114,16 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
 
 void function OnMenu_Open() 
 {
-  //TODO Call server to get ban data
+  print("THIS SHOULD BE A CALLBACK")
+  reloadCurrentScreen()
+  
+ 		try {
+      ClientCommand( "BanUiRequestUpdate" )
+ 
+		} catch (ex) {
+      print("A")
+    }
+    ClientCommand( "Test " )
 }
 
 void function InitCustomSelectMenu()
