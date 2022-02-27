@@ -1,5 +1,6 @@
 global function AddNorthstarCustomMatchSettingsBanMenu
 global function OnMenu_Open
+global function UpdateBanUI
 
 struct BoolAttributte {
   bool disabled = false
@@ -77,7 +78,7 @@ void function AddNorthstarCustomMatchSettingsBanMenu()
 
 void function InitNorthstarCustomMatchSettingsBanMenu()
 {
-  AddCustomMenuCategory("#BAN_PAGE" , "CustomMatchBanSettingsMenu")
+  AddCustomCategory("#BAN_PAGE" , "CustomMatchBanSettingsMenu")
   
   file.menu = GetMenu( "CustomMatchBanSettingsMenu" )
   AddMenuEventHandler( file.menu, eUIEvent.MENU_OPEN, OnMenu_Open )
@@ -114,16 +115,7 @@ void function InitNorthstarCustomMatchSettingsBanMenu()
 
 void function OnMenu_Open() 
 {
-  print("THIS SHOULD BE A CALLBACK")
   reloadCurrentScreen()
-  
- 		try {
-      ClientCommand( "BanUiRequestUpdate" )
- 
-		} catch (ex) {
-      print("A")
-    }
-    ClientCommand( "Test " )
 }
 
 void function InitCustomSelectMenu()
@@ -148,6 +140,9 @@ void function InitCustomSelectMenu()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// UI Functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void function OnModSelectBGScreen_Activate( var button )
 {
 	CloseActiveMenu(true)
@@ -369,16 +364,30 @@ void function callChangeMainDisplay( var pressedButton )
 
 void function reloadCurrentScreen() 
 {
-    if (file.selected == 0) {
-      reloadPilotScreen()
-    } else if(file.selected == 1) {
-      loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
-    } else if (file.selected == 2) {
-      loadTitanCategory(file.titan.categories[file.titan.categorySelected])
-    } else if (file.selected == 3) {
-      reloadBoostScreen()
-    }
-    RestoreHiddenSubmenuBackgroundElems()
+  if (file.selected == 0) {
+    ClientCommand( "BanUiRequestUpdate " + 0)
+  } else if(file.selected == 1) {
+    ClientCommand( "BanUiRequestUpdate " + ( 1 + file.weapon.categorySelected ) )
+  } else if (file.selected == 2) {
+    ClientCommand( "BanUiRequestUpdate " + ( 9 + file.titan.categorySelected ) )
+  } else if (file.selected == 3) {
+    ClientCommand( "BanUiRequestUpdate " + 12 )
+  }
+  reloadActiveUI()
+}
+
+void function reloadActiveUI() 
+{
+  if (file.selected == 0) {
+    reloadPilotScreen()
+  } else if(file.selected == 1) {
+    loadWeaponCategory(file.weapon.categories[file.weapon.categorySelected])
+  } else if (file.selected == 2) {
+    loadTitanCategory(file.titan.categories[file.titan.categorySelected])
+  } else if (file.selected == 3) {
+    reloadBoostScreen()
+  }
+  RestoreHiddenSubmenuBackgroundElems()
 }
 
 void function callPilotButtonClick(var pressedButton) 
@@ -430,6 +439,7 @@ void function changeWeaponDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.weapon.categorySelected) {
+    ClientCommand( "BanUiRequestUpdate " + ( 1 + selected) )
     selectButton(file.weapon.buttons, file.weapon.categorySelected, selected)
     loadWeaponCategory(file.weapon.categories[selected])
     
@@ -484,6 +494,7 @@ void function changeTitanDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.titan.categorySelected) {
+    ClientCommand( "BanUiRequestUpdate " + ( 9 + selected) )
     selectButton(file.titan.buttons, file.titan.categorySelected, selected)
     loadTitanCategory(file.titan.categories[selected])
     
@@ -560,6 +571,10 @@ void function reloadPilotScreen()
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Data import/export
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void function setAllAttributes(bool enabled) 
 {
   //Pilot
@@ -626,9 +641,13 @@ void function exportConfigToString(var pressedButton)
       } else {
         exportString += string(0)
       }
-      exportString += string(weapon.selectedAtr0)
-      exportString += string(weapon.selectedAtr1)
-      exportString += string(weapon.selectedAtr2)
+      exportString += weapon.atr0.values[weapon.selectedAtr0]
+      exportString += weapon.atr1.values[weapon.selectedAtr1]
+      try {
+        exportString += weapon.atr2.values[weapon.selectedAtr2]
+      } catch (exception) {
+        exportString += 0 + ""
+      }
     }
   }
   //Titan
@@ -642,9 +661,9 @@ void function exportConfigToString(var pressedButton)
       } else {
         exportString += string(0)
       }
-      exportString += string(titan.selectedAtr0)
-      exportString += string(titan.selectedAtr1)
-      exportString += string(titan.selectedAtr2)
+      exportString += titan.atr0.values[titan.selectedAtr0]
+      exportString += titan.atr1.values[titan.selectedAtr1]
+      exportString += titan.atr2.values[titan.selectedAtr2]
     }
   }
   //Boost
@@ -660,99 +679,142 @@ void function exportConfigToString(var pressedButton)
   Hud_SetText( Hud_GetChild( file.menu, "ImportExportArea" ), exportString )
 }
 
+array<int> function parseImportData(string importData) 
+{
+  array<int> importArray
+  for(int i = 0; i < importData.len(); i++) {
+    switch (importData[i]) {
+      case 48:
+        importArray.append(0)
+        break
+      case 49:
+        importArray.append(1)
+        break
+      case 50:
+        importArray.append(2)
+        break
+      case 51:
+        importArray.append(3)
+        break
+      case 52:
+        importArray.append(4)
+        break
+      case 53:
+        importArray.append(5)
+        break
+      case 54:
+        importArray.append(6)
+        break
+      case 55:
+        importArray.append(7)
+        break
+      case 56:
+        importArray.append(8)
+        break
+      case 57:
+        importArray.append(9)
+        break
+    }
+  }
+
+  return importArray
+}
+
+int function importPilotConfig( array<int> config, int count = 0 ) 
+{
+  foreach(BoolAttributte attribute in file.pilot.attributes)
+  {
+    attribute.disabled = (config[count++] == 1) ? true : false
+  }
+  return count
+}
+
+int function importWeaponConfig( array<int> config, int count = 0 ) 
+{
+  for(int i = 0; i < file.weapon.categories.len();i++) 
+  {
+    count = importWeaponCategoryConfig(i, config, count)
+  }
+  return count
+}
+
+int function importWeaponCategoryConfig(int category ,array<int> config, int count = 0 ) 
+{
+  for(int i = 0; i < file.weapon.categories[category].loadouts.len(); i++) 
+  {
+    Loadout weapon = file.weapon.categories[category].loadouts[i]
+
+    weapon.disabled = (config[count++] == 1) ? true : false
+    
+    weapon.selectedAtr0 = ( arrayContains( weapon.atr0.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+    weapon.selectedAtr1 = ( arrayContains( weapon.atr1.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+    weapon.selectedAtr2 =  ( arrayContains( weapon.atr2.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+  }
+  return count
+}
+
+int function importTitanConfig( array<int> config, int count = 0 ) 
+{
+  for(int i = 0; i < file.titan.categories.len(); i++) 
+  {
+    count = importTitanCategoryConfig(i, config, count)
+  }
+  return count
+}
+
+int function importTitanCategoryConfig(int category ,array<int> config, int count = 0 ) 
+{
+  for(int i = 0; i < file.titan.categories[category].loadouts.len(); i++) 
+  {
+    Loadout titan = file.titan.categories[category].loadouts[i]
+    titan.disabled = (config[count++] == 1) ? true : false
+
+    titan.selectedAtr0 = ( arrayContains( titan.atr0.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+    titan.selectedAtr1 = ( arrayContains( titan.atr1.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+    titan.selectedAtr2 = ( arrayContains( titan.atr2.values, config[count] + "" ) ? config[count] : 0 )
+    count++
+    }
+    return count
+}
+
+int function importBoostConfig( array<int> config, int count = 0 ) 
+{
+  foreach(BoolAttributte attribute in file.boost.boosts)
+  {
+    attribute.disabled = (config[count++] == 1) ? true : false
+  }
+  return count 
+}
+
 void function importConfigToString(var pressedButton) 
 {
   string importString = Hud_GetUTF8Text( Hud_GetChild( file.menu, "ImportExportArea" ) ) 
-  array<int> importArray
-
   if(importString.len() != 177) {
     return
   }
-  for(int i = 0; i < importString.len(); i++) {
-    if(importString[i] == 55) {
-      importArray.append(7)
-    } else if(importString[i] == 54) {
-      importArray.append(6)
-    } else if(importString[i] == 53) {
-      importArray.append(5)
-    } else if(importString[i] == 52) {
-      importArray.append(4)
-    } else if(importString[i] == 51) {
-      importArray.append(3)
-    } else if(importString[i] == 50) {
-      importArray.append(2)
-    } else if(importString[i] == 49) {
-      importArray.append(1)
-    } else {
-      importArray.append(0)
-    }
-  }
+
+  array<int> importArray = parseImportData(importString)
   int count = 0
-  //Pilot
-  foreach(BoolAttributte attribute in file.pilot.attributes)
-  {
-    if(importArray[count++] == 1) {
-      attribute.disabled = true
-    } else {
-      attribute.disabled = false
-    }
-  }
-  
-  
-  //Weapon
-  for(int i = 0; i < file.weapon.categories.len();i++) 
-  {
-    for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
-    {
-      Loadout weapon = file.weapon.categories[i].loadouts[j]
 
-      if(importArray[count++] == 1) {
-        weapon.disabled = true
-      } else {
-        weapon.disabled = false
-      }
-    
-      weapon.selectedAtr0 = ( importArray[count] < weapon.atr0.values.len() ? importArray[count] : 0 )
-      count++
-      weapon.selectedAtr1 = ( importArray[count] < weapon.atr1.values.len() ? importArray[count] : 0 )
-      count++
-      weapon.selectedAtr2 =  ( importArray[count] < weapon.atr2.values.len() ? importArray[count] : 0 )
-      count++
-    }
+  if(importArray.len() != 177) {
+    return
   }
-  
-  //Titan
-  for(int i = 0; i < file.titan.categories.len(); i++) 
-  {
-    for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
-    {
-      Loadout titan = file.titan.categories[i].loadouts[j]
-      if(importArray[count++] == 1) {
-        titan.disabled = true
-      } else {
-        titan.disabled = false
-      }
 
-      titan.selectedAtr0 = ( importArray[count] < titan.atr0.values.len() ? importArray[count] : 0 )
-      count++
-      titan.selectedAtr1 = ( importArray[count] < titan.atr1.values.len() ? importArray[count] : 0 )
-      count++
-      titan.selectedAtr2 = ( importArray[count] < titan.atr2.values.len() ? importArray[count] : 0 )
-      count++
-    }
-  }
-  //Boost
-  foreach(BoolAttributte attribute in file.boost.boosts)
-  {
-    if(importArray[count++] == 1) {
-      attribute.disabled = true
-    } else {
-      attribute.disabled = false
-    }
-  } 
+  count = importPilotConfig(importArray, count)  
+  count = importWeaponConfig(importArray, count)
+  count = importTitanConfig(importArray, count)
+  count = importBoostConfig(importArray, count)
   reloadCurrentScreen() 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Data Init
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void function initPilot() 
 {
   PilotDisplay pilot = file.pilot
@@ -820,14 +882,14 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/tactikill",
     $"ui/menu/items/mod_icons/none"]
   defaultMod.values = [
-    "undefined",
-    "extended_ammo",
-    "gunrunner",
-    "speed_loader",
-    "gun_ready",
-    "speed_transition",
-    "tactikill",
-    "none"]
+    "0",
+    "1",
+    "4",
+    "2",
+    "3",
+    "6",
+    "5",
+    "7"]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Category ar
@@ -841,11 +903,11 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/attachments/hcog" ,
     $"r2_ui/menus/loadout_icons/attachments/threat_scope"]
   arVisor.values = [
-    "undefined",
-    "iron_sights",
-    "hcog_ranger",
-    "hcog",
-    "threat_scope"]
+    "0",
+    "7",
+    "3",
+    "2",
+    "6"]
 
   ar.loadouts.append(createWeapon(
     "r201",
@@ -862,11 +924,11 @@ void function initWeapon()
         $"r2_ui/menus/loadout_icons/attachments/hcog" ,
         $"r2_ui/menus/loadout_icons/attachments/threat_scope"],
       values = [
-        "undefined",
-        "aog",
-        "hcog_ranger",
-        "hcog",
-        "threat_scope"]   
+        "0",
+        "7",
+        "3",
+        "2",
+        "6"]   
     }  
   ar.loadouts.append(createWeapon(
     "r101",
@@ -907,11 +969,11 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/attachments/holosight" ,
     $"r2_ui/menus/loadout_icons/attachments/threat_scope"]
   smgVisor.values = [
-    "undefined",
-    "iron_sights",
-    "hcog_ranger",
-    "holosight",
-    "threat_scope"]
+    "0",
+    "7",
+    "3",
+    "1",
+    "6"]
 
   smg.loadouts.append(createWeapon(
     "car",
@@ -954,11 +1016,11 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/attachments/aog",
     $"r2_ui/menus/loadout_icons/attachments/threat_scope"]
   lmgVisor.values = [
-    "undefined",
-    "iron_sights",
-    "hcog_ranger",
-    "aog",
-    "threat_scope"]
+    "0",
+    "7",
+    "3",
+    "4",
+    "6"]
 
   lmg.loadouts.append(createWeapon(
     "spitfire",
@@ -993,10 +1055,10 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/attachments/variable_zoom",
     $"r2_ui/menus/loadout_icons/attachments/threat_scope",]
   sniperViser.values = [
-    "stock_scope",
-    "iron_sights",
-    "variable_zoom",
-    "threat_scope",]
+    "0"
+    "7",
+    "5",
+    "6",]
 
   ArrayAttribute takeViser
   takeViser.images = [
@@ -1005,10 +1067,10 @@ void function initWeapon()
     $"r2_ui/menus/loadout_icons/attachments/variable_zoom",
     $"r2_ui/menus/loadout_icons/attachments/threat_scope",]
   takeViser.values = [
-    "stock_doubletake_sight",
-    "iron_sights",
-    "variable_zoom",
-    "threat_scope",]  
+    "0",
+    "7",
+    "5",
+    "6",]  
 
   ArrayAttribute sniperModOne
   sniperModOne.images = [
@@ -1021,14 +1083,14 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/ricochet",
     $"ui/menu/items/mod_icons/none"]
   sniperModOne.values = [
-    "undefined",
-    "extended_ammo",
-    "speed_loader",
-    "gun_ready",
-    "speed_transition",
-    "tactikill",
-    "ricochet",
-    "none"]
+    "0",
+    "1",
+    "2",
+    "3",
+    "6",
+    "5",
+    "8",
+    "7"]
 
   ArrayAttribute sniperModTwo
   sniperModTwo.images = [
@@ -1040,13 +1102,13 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/tactikill",
     $"ui/menu/items/mod_icons/none"]
   sniperModTwo.values = [
-    "undefined",
-    "extended_ammo",
-    "speed_loader",
-    "gun_ready",
-    "speed_transition",
-    "tactikill",
-    "none"]    
+    "0",
+    "1",
+    "2",
+    "3",
+    "6",
+    "5",
+    "7"]    
 
   sniper.loadouts.append(createWeapon(
     "kraber",
@@ -1133,14 +1195,14 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/tactikill",
     $"ui/menu/items/mod_icons/none"]
   handgunMod.values = [
-    "undefined",
-    "extended_ammo",
-    "suppressor",
-    "gunrunner",
-    "speed_loader",
-    "gun_ready",
-    "tactikill",
-    "none"]
+    "0",
+    "1",
+    "8",
+    "4",
+    "2",
+    "3",
+    "5",
+    "7"]
 
   ArrayAttribute wingmanMod
   wingmanMod.images = [
@@ -1153,14 +1215,14 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/tactikill",
     $"ui/menu/items/mod_icons/none"]
   wingmanMod.values = [
-    "undefined",
-    "extended_ammo",
-    "ricochet",
-    "gunrunner",
-    "speed_loader",
-    "gun_ready",
-    "tactikill",
-    "none"]
+    "0",
+    "2",
+    "8",
+    "4",
+    "2",
+    "3",
+    "5",
+    "7"]
 
   handgun.loadouts.append(createWeaponNoVisor(
     "wingman_elite",
@@ -1206,12 +1268,12 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/speed_transition",
     $"ui/menu/items/mod_icons/none"]
   antiTitanMod.values = [
-    "undefined",
-    "extended_ammo",
-    "speed_loader",
-    "gun_ready",
-    "speed_transition",
-    "none"]
+    "0",
+    "1",
+    "2",
+    "3",
+    "6",
+    "7"]
 
   ArrayAttribute chargerifleMod
   chargerifleMod.images = [
@@ -1222,12 +1284,12 @@ void function initWeapon()
     $"rui/pilot_loadout/mods/speed_transition",
     $"ui/menu/items/mod_icons/none"]
   chargerifleMod.values = [
-    "undefined",
-    "extended_ammo",
-    "charge_hack",
-    "speed_loader",
-    "gun_ready",
-    "none"]
+    "0",
+    "1",
+    "8",
+    "2",
+    "3",
+    "7"]
 
   antiTitan.loadouts.append(createWeaponNoVisor(
     "chargerifle",
@@ -1338,9 +1400,9 @@ void function initTitan()
     $"rui/titan_loadout/passive/titanfall_kit_bubbleshield",
     $"rui/titan_loadout/passive/titanfall_kit_warpfall"]
   fallKit.values = [
-    "undefined"
-    "bubbleshield",
-    "warpfall"
+    "0"
+    "7",
+    "8"
   ]
 
   ArrayAttribute titanKit
@@ -1353,13 +1415,13 @@ void function initTitan()
     $"rui/titan_loadout/passive/nuke_eject",
     $"rui/titan_loadout/passive/improved_anti_rodeo"]
   titanKit.values = [
-    "undefined",
-    "assault_chip",
-    "auto_eject",
-    "dash_plus",
-    "overcore",
-    "nuke_eject",
-    "improved_anti_rodeo"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
   ]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
@@ -1383,12 +1445,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/northstar_threat_optics"
   ]
   northstarKit.values = [
-    "undefined",
-    "northstar_piercing_shot",
-    "northstar_enhanced_payload",
-    "northstar_twin_trap",
-    "northstar_viper_thrusters",
-    "northstar_threat_optics"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   northstar.atr0 = northstarKit
   northstar.atr1 = titanKit
@@ -1412,12 +1474,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/ronin_auto_shift"
   ]
   roninKit.values = [
-    "undefined",
-    "ronin_ricochet_round",
-    "ronin_thunderstorm",
-    "ronin_temporal_anomaly",
-    "ronin_highlander",
-    "ronin_auto_shift"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   ronin.atr0 = roninKit
   ronin.atr1 = titanKit
@@ -1447,12 +1509,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/ion_diffraction_lens"
   ]
   ionKit.values = [
-    "undefined",
-    "ion_entangled_energy",
-    "ion_zero_point_tripwire",
-    "ion_vortex_amp",
-    "ion_grand_canon",
-    "ion_diffraction_lens"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   ion.atr0 = ionKit
   ion.atr1 = titanKit
@@ -1477,12 +1539,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/tone_40mm_burst"
   ]
   toneKit.values = [
-    "undefined",
-    "tone_enhanced_tracker",
-    "tone_reinforced_partical_wall",
-    "tone_pulse_echo",
-    "tone_rocket_barrage",
-    "tone_40mm_burst"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   tone.atr0 = toneKit
   tone.atr1 = titanKit
@@ -1506,11 +1568,11 @@ void function initTitan()
     $"rui/titan_loadout/passive/vanguard_rearm"
   ]
   monarchKit.values = [
-    "undefined",
-    "vanguard_fittest",
-    "vanguard_siphon",
-    "vanguard_survivor",
-    "vanguard_rearm"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
   ]
   monarch.atr0 = monarchKit
   monarch.atr1 = titanKit
@@ -1533,10 +1595,10 @@ void function initTitan()
     $"rui/titan_loadout/passive/monarch_core_missile_racks"
   ]
   monarchCore0.values = [
-    "undefined",
-    "monarch_core_arc_rounds",
-    "monarch_core_energy_field",
-    "monarch_core_missile_racks"
+    "0",
+    "1",
+    "2",
+    "3"
   ]
   ArrayAttribute monarchCore1
   monarchCore1.images = [
@@ -1546,10 +1608,10 @@ void function initTitan()
     $"rui/titan_loadout/passive/monarch_core_energy_transfer"
   ]
   monarchCore1.values = [
-    "undefined",
-    "monarch_core_swift_rearm",
-    "monarch_core_maelstrom",
-    "monarch_core_energy_transfer"
+    "0",
+    "1",
+    "2",
+    "3"
   ]
   ArrayAttribute monarchCore2
   monarchCore2.images = [
@@ -1559,10 +1621,10 @@ void function initTitan()
     $"rui/titan_loadout/passive/monarch_core_xo16"
   ]
   monarchCore2.values = [
-    "undefined",
-    "monarch_core_multi_target",
-    "monarch_core_superior_chassis",
-    "monarch_core_xo16"
+    "0",
+    "1",
+    "2",
+    "3"
   ]
   monarchCores.atr0 = monarchCore0
   monarchCores.atr1 = monarchCore1
@@ -1592,12 +1654,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/scorch_tempered_plating"
   ]
   scorchKit.values = [
-    "undefined",
-    "scorch_wildfire_launcher",
-    "scorch_fuel",
-    "scorch_scorched_earth",
-    "scorch_inferno_shield",
-    "scorch_tempered_plating"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   scorch.atr0 = scorchKit
   scorch.atr1 = titanKit
@@ -1623,12 +1685,12 @@ void function initTitan()
     $"rui/titan_loadout/passive/legion_siege_mode"
   ]
   legionKit.values = [
-    "undefined",
-    "legion_enhanced_ammo",
-    "legion_sensor_array",
-    "legion_bulwark",
-    "legion_lightweight_alloys",
-    "legion_siege_mode"
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
   ]
   legion.atr0 = legionKit
   legion.atr1 = titanKit
@@ -1688,4 +1750,72 @@ void function initBoost()
 
 	RuiSetString( rui, "nameText", Localize("MODE_SETTING_BAN_BOOST_LBL_TITLE") )
 	RuiSetString( rui, "descText", Localize("MODE_SETTING_BAN_BOOST_LBL_TEXT") )
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Networking
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void function UpdateBanUI( int uiToUpdate , int dataSet0, int dataSet1, int dataSet2) 
+{
+  print("Recive update reponse")
+  switch(uiToUpdate) 
+	{
+		case 0: //PILOT UI
+      importPilotConfig(parseImportData( dataSet0 + "" + dataSet1))
+			break
+		case 1: //Assult rifle
+      importWeaponCategoryConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 2: //SMG
+      importWeaponCategoryConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 3: // LMG
+      importWeaponCategoryConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 4: // SNIPER
+      importWeaponCategoryConfig(3, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 5: // SHOTGUN
+      importWeaponCategoryConfig(4, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 6: // GRENADIER
+      importWeaponCategoryConfig(5, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 7: // PISTOL
+      importWeaponCategoryConfig(6, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 8: // ANTI-TITAN
+      importWeaponCategoryConfig(7, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 9: // STRYDER
+      importTitanCategoryConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 10: //ATLAS
+      importTitanCategoryConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 11: //OGRE
+      importTitanCategoryConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			break
+		case 12: //BOOST
+      importBoostConfig(parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+			//Is split into two due to max int being 10 characters
+			break
+	}
+
+  reloadActiveUI()
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Utility
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool function arrayContains(array<string> a, string toCheck) 
+{
+  foreach (string s in a) 
+  {
+    if (toCheck == s) {
+      return true
+    }
+  }
+  return false
 }

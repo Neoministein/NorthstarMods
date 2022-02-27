@@ -7,7 +7,8 @@ global struct WeaponBanStruct {
 	bool   disabled,
 	string	  mod1,
 	string    mod2,
-	array <string>   visor
+	array <string>   visor,
+	string uniqueMod,
 } 
 
 global struct BoostBanStruct
@@ -22,15 +23,10 @@ global struct TitanBanStruct
 	string name, 
 	bool disabled,
 
+	//thanks monarch for making me  handle 3 seperet core passives
 	string passive1,
 	string passive2,
 	string passive3,
-
-	//thanks monarch for making me  handle 3 seperet core passives
-	string core1,
-	string core2,
-	string core3,
-
 }
 
 global struct UniversalBanStruct
@@ -56,27 +52,399 @@ void function BanEquipment_Init()
     print(" |______  / |__|    \\___  >____  /__|_ \\  |____|   \\____/|__|___|  /__|  ")
     print("        \\/              \\/     \\/     \\/                         \\/      ")
     print("")
-
-	
-	#if SERVER
-		AddClientCommandCallback( "BanUiRequestUpdate", ClientCommandCallback_BanUiRequestUpdate )
-		InitData()
-	#endif
-	ServerCommand("TestCommand")
-	AddCallback_OnRegisteringCustomNetworkVars( Ban_RegisterRemoteFunctions )
+	InitData()
+	AddClientCommandCallback( "BanUiRequestUpdate", ClientCommandCallback_BanUiRequestUpdate )
 }
 
 bool function ClientCommandCallback_BanUiRequestUpdate( entity player, array<string> args ) 
 {
+	if(0 == args.len()) {
+		return false;
+	}
+	int uiToUpdate = int(args[0])
+	print("BAN UI to update: " + uiToUpdate)
 
-	Remote_CallFunction_NonReplay( player, "ServerCallback_UpdateBanUi" )
-	print("UI_CALLS")
+	switch(uiToUpdate) 
+	{
+		case 0: //PILOT UI
+			string pilotAbilities = "9"
+			foreach (UniversalBanStruct banStruct in file.abilityArray ) 
+			{
+				pilotAbilities += banStruct.disabled ? "1" : "0"
+			}
+			string ordinances = "9"
+			foreach (UniversalBanStruct banStruct in file.grenadeArray ) 
+			{
+				ordinances += banStruct.disabled ? "1" : "0"
+			}
+			Remote_CallChannel(player, 11669790, uiToUpdate, int(pilotAbilities), int(ordinances))
+			break
+		case 1: //Assult rifle
+			array<int> weaponData = GetBundeledWeaponData (0, 1, 2, 3, 4)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 2: //SMG
+			array<int> weaponData = GetBundeledWeaponData (5, 6, 7, 8)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 3: // LMG
+			array<int> weaponData = GetBundeledWeaponData (9, 10, 11)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 4: // SNIPER
+			array<int> weaponData = GetBundeledWeaponData (12, 13, 14)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 5: // SHOTGUN
+			array<int> weaponData = GetBundeledWeaponData (15, 16)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 6: // GRENADIER
+			array<int> weaponData = GetBundeledWeaponData (17, 18, 19, 20)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 7: // PISTOL
+			array<int> weaponData = GetBundeledWeaponData (21, 22, 23, 24, 25)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 8: // ANTI-TITAN
+			array<int> weaponData = GetBundeledWeaponData (26, 28, 29)
+			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
+			break
+		case 9: // STRYDER
+			array<int> titanData = GetBundeledWeaponData (0, 1)
+			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
+			break
+		case 10: //ATLAS
+			array<int> titanData = GetBundeledWeaponData (2, 3, 4, 5)
+			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
+			break
+		case 11: //OGRE
+			array<int> titanData = GetBundeledWeaponData (6, 7)
+			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
+			break
+		case 12: //BOOST
+			//Is split into two due to max int being 10 characters
+			string firstHalfBoosts = "9"
+			for(int i = 0; i < file.boostArray.len()/2; i++) {
+				firstHalfBoosts += file.boostArray[i].disabled ? "1" : "0"
+			}
+			string secondHalfBoosts = "9"
+			for(int i = file.boostArray.len()/2; i < file.boostArray.len(); i++) {
+				secondHalfBoosts += file.boostArray[i].disabled ? "1" : "0"
+			}
+			Remote_CallChannel(player, 11669790, uiToUpdate, int(firstHalfBoosts), int(secondHalfBoosts))
+			break
+
+	}
+	//int displayToUpdate = int(args.len())
+
 	return true
 }
 
-void function Ban_RegisterRemoteFunctions()
+array<int> function GetBundeledWeaponData(int idOne = -1, int idTwo = -1, int idThree = -1, int idFour = -1, int idFive = -1) 
 {
-	Remote_RegisterFunction( "ServerCallback_UpdateBanUi" )
+	array<int> weaponData = []
+	weaponData.append(int("9" + GetWeaponStringaData(idOne) + GetWeaponStringaData(idTwo))) 
+	weaponData.append(int("9" + GetWeaponStringaData(idThree) + GetWeaponStringaData(idFour)))
+	weaponData.append(int("9" + GetWeaponStringaData(idFive) + GetWeaponStringaData(-1)))
+
+	return weaponData
+}
+
+string function GetWeaponStringaData(int id) 
+{
+	if(id == -1) {
+		return "0000"
+	}
+	WeaponBanStruct currentStruct = file.weaponArray[id]
+	string data = ""
+	data += currentStruct.disabled ? "1" : "0"
+	data += GetWeaponModById(currentStruct.mod1)
+	data += GetWeaponModById(currentStruct.mod2)
+	data += GetWeaponVisorById(currentStruct.visor[0])
+	return data
+}
+
+string function GetWeaponModById(string id) 
+{
+	switch(id) 
+	{
+		case "UNDEFINED":
+			return "0"
+		case "extended_ammo":
+			return "1"
+		case "pas_fast_reload":
+			return "2"
+		case "pas_fast_ads":
+			return "3"
+		case "pas_run_and_gun":
+			return "4"
+		case "tactical_cdr_on_kill":
+			return "5"
+		case "pas_fast_swap":
+			return "6"
+		case "":
+			return "7"					
+	}
+	return "8"
+}
+
+string function GetWeaponVisorById(string id) 
+{
+	switch(id) 
+	{
+		case "UNDEFINED":
+			return "0"
+		case "holosight":
+			return "1"	
+		case "hcog":
+			return "2"
+		case "redline_sight":
+			return "3"
+		case "aog":
+			return "4"
+		case "scope_4x":
+			return "5"
+		case "threat_scope":
+			return "6"
+		case "":
+			return "7"					
+	}
+	return "0"
+}
+
+array<int> function GetBundeledTitanData(int idOne = -1, int idTwo = -1, int idThree = -1, int idFour = -1, int idFive = -1) 
+{
+	array<int> weaponData = []
+	weaponData.append(int("9" + GetTitanStringaData(idOne) + GetTitanStringaData(idTwo))) 
+	weaponData.append(int("9" + GetTitanStringaData(idThree) + GetTitanStringaData(idFour)))
+	weaponData.append(int("9" + GetTitanStringaData(idFive) + GetTitanStringaData(-1)))
+
+	return weaponData
+}
+
+
+string function GetTitanStringaData(int id) 
+{
+	if(id == -1) {
+		return "0000"
+	}
+	TitanBanStruct currentStruct = file.titanArray[id]
+	string data = ""
+	if(id != 5) 
+	{
+		data += currentStruct.disabled ? "1" : "0"
+		data += GetTitanPassives(currentStruct.passive1)
+		data += GetTitanKit(currentStruct.passive2, currentStruct.name)
+		data += GetTitanPassives(currentStruct.passive3)
+	} else 
+	{
+		data += "1"
+		data += GetMonarchCores(currentStruct.passive1, 0)
+		data += GetMonarchCores(currentStruct.passive2, 1)
+		data += GetMonarchCores(currentStruct.passive3, 2)
+	}
+
+	return data
+} 
+
+string function GetTitanPassives(string id) 
+{
+	switch(id) 
+	{
+		case "UNDEFINED":
+			return "0"
+		case "pas_enhanced_titan_ai":
+			return "1"	
+		case "pas_auto_eject":
+			return "2"
+		case "pas_mobility_dash_capacity":
+			return "3"
+		case "pas_hyper_core": 
+			return "4"
+		case "pas_build_up_nuclear_core":
+			return "5"
+		case "pas_anti_rodeo":
+			return "6"	
+		case "pas_bubbleshield":
+			return "7"
+		case "pas_warpfall":
+			return "8"						
+	}
+	return "0"
+}
+
+string function GetTitanKit(string id, string titanKit) 
+{
+	if(id == "UNDEFINED") 
+	{
+		return "0"
+	}
+
+	if(titanKit == "ion") 
+	{
+		switch(id) 
+		{
+			case "pas_ion_weapon":
+				return "1"	
+			case "pas_ion_tripwire":
+				return "2"
+			case "passive2 pas_ion_vortex":
+				return "3"
+			case "pas_ion_lasercannon": 
+				return "4"	
+			case "pas_ion_weapon_ads": 
+				return "5"									
+		}
+	}
+
+	if(titanKit == "scorch") 
+	{
+		switch(id) 
+		{
+			case "pas_scorch_weapon":
+				return "1"	
+			case "pas_scorch_selfdmg":
+				return "2"
+			case "pas_scorch_shield":
+				return "3"
+			case "passive2 pas_scorch_firewall": 
+				return "4"	
+			case "pas_scorch_flamecore": 
+				return "5"						
+		}
+	}
+
+	if(titanKit == "northstar") 
+	{
+		switch(id) 
+		{
+			case "pas_northstar_weapon":
+				return "1"	
+			case "pas_northstar_cluster":
+				return "2"
+			case "pas_northstar_trap":
+				return "3"
+			case "pas_northstar_flightcore": 
+				return "4"
+			case "pas_northstar_optics": 
+				return "5"						
+		}
+	}
+
+	if(titanKit == "ronin") 
+	{
+		switch(id) 
+		{
+			case "pas_ronin_weapon":
+				return "1"	
+			case "pas_ronin_arcwave":
+				return "2"
+			case "pas_ronin_phase":
+				return "3"
+			case "pas_ronin_swordcore": 
+				return "4"
+			case "pas_ronin_autoshift": 
+				return "5"			
+		}
+	}
+
+	if(titanKit == "tone") 
+	{
+		switch(id) 
+		{
+			case "pas_tone_weapon":
+				return "1"	
+			case "pas_tone_wall":
+				return "2"
+			case "pas_tone_sonar":
+				return "3"
+			case "pas_tone_rockets": 
+				return "4"
+			case "pas_tone_burst": 
+				return "5"	
+		}
+	}
+
+	if(titanKit == "legion") 
+	{
+		switch(id) 
+		{
+			case "pas_enhanced_titan_ai":
+				return "1"	
+			case "pas_legion_smartcore":
+				return "2"
+			case "pas_legion_gunshield":
+				return "3"
+			case "pas_legion_spinup": 
+				return "4"
+			case "pas_legion_chargeshot": 
+				return "4"
+		}
+	}
+
+	if(titanKit == "vanguard") 
+	{
+		switch(id) 
+		{
+			case "pas_vanguard_shield":
+				return "1"	
+			case "pas_vanguard_coremeter":
+				return "2"
+			case "pas_vanguard_rearm":
+				return "3"
+			case "pas_vanguard_doom": 
+				return "4"						
+		}
+	}
+	return "0"
+}
+
+string function GetMonarchCores(string id, int coreStage) 
+{
+	if(id == "UNDEFINED") 
+	{
+		return "0"
+	}
+	if(coreStage == 0) 
+	{
+		switch(id) 
+		{
+			case "pas_vanguard_core1":
+				return "1"	
+			case "pas_vanguard_core2":
+				return "2"
+			case "pas_vanguard_core3":
+				return "3"
+		}
+	}
+
+	if(coreStage == 1) 
+	{
+		switch(id) 
+		{
+			case "pas_vanguard_core4":
+				return "1"	
+			case "pas_vanguard_core5":
+				return "2"
+			case "pas_vanguard_core6":
+				return "3"
+		}
+	}
+	if(coreStage == 2) 
+	{
+		switch(id) 
+		{
+			case "pas_vanguard_core7":
+				return "1"	
+			case "pas_vanguard_core8":
+				return "2"
+			case "pas_vanguard_core9":
+				return "3"
+		}
+	}
+	return "0"
 }
 
 array<WeaponBanStruct> function getWeaponBanData() 
@@ -154,8 +522,8 @@ void function InitData()
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_lmg"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_lstar"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_esaw"))
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_sniper"))
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_doubletake"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_sniper", "ricochet"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_doubletake", "ricochet"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_dmr"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_shotgun"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_mastiff"))
@@ -163,27 +531,30 @@ void function InitData()
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_epg"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_softball"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_pulse_lmg"))
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_wingman_n"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_wingman_n", "ricochet"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_shotgun_pistol"))
 
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_autopistol"))
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_semipistol"))
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_wingman"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_autopistol", "silencer"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_semipistol", "silencer"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_wingman", "silencer"))
 
 	
-	file.weaponArray.append(createWeaponBanStruct("mp_weapon_defender"))
+	file.weaponArray.append(createWeaponBanStruct("mp_weapon_defender", "quick_charge"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_mgl"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_arc_launcher"))
 	file.weaponArray.append(createWeaponBanStruct("mp_weapon_rocket_launcher"))
 
 	file.titanArray = []
-	file.titanArray.append(createTitanBanStruct("ion"))
-	file.titanArray.append(createTitanBanStruct("scorch"))
 	file.titanArray.append(createTitanBanStruct("northstar"))
 	file.titanArray.append(createTitanBanStruct("ronin"))
+
+	file.titanArray.append(createTitanBanStruct("ion"))
 	file.titanArray.append(createTitanBanStruct("tone"))
-	file.titanArray.append(createTitanBanStruct("legion"))
 	file.titanArray.append(createTitanBanStruct("vanguard"))
+	file.titanArray.append(createTitanBanStruct("vanguardCores", true))
+	
+	file.titanArray.append(createTitanBanStruct("scorch"))
+	file.titanArray.append(createTitanBanStruct("legion"))
 }
 
 UniversalBanStruct function createUniversalBanStruct(string name) 
@@ -194,14 +565,15 @@ UniversalBanStruct function createUniversalBanStruct(string name)
 	return newStruct
 }
 
-WeaponBanStruct function createWeaponBanStruct(string name) 
+WeaponBanStruct function createWeaponBanStruct(string name, string uniqueMod = "") 
 {
 	WeaponBanStruct newStruct 
 	newStruct.name = name 
 	newStruct.disabled = false
 	newStruct.mod1 = "UNDEFINED"
 	newStruct.mod2 = "UNDEFINED"
-	newStruct.visor = [""]
+	newStruct.visor = ["UNDEFINED"]
+	newStruct.uniqueMod = uniqueMod
 
 	return newStruct
 }
@@ -215,16 +587,13 @@ BoostBanStruct function createBoostBanStruct(string name, int id)
 	return newStruct
 }
 
-TitanBanStruct function createTitanBanStruct(string name) 
+TitanBanStruct function createTitanBanStruct(string name, bool disabled = false) 
 {
 	TitanBanStruct newStruct
 	newStruct.name = name
-	newStruct.disabled = false
+	newStruct.disabled = disabled
 	newStruct.passive1 = "UNDEFINED"
 	newStruct.passive2 = "UNDEFINED"
 	newStruct.passive3 = "UNDEFINED"
-	newStruct.core1 = "UNDEFINED"
-	newStruct.core2 = "UNDEFINED"
-	newStruct.core3 = "UNDEFINED"
 	return newStruct
 }

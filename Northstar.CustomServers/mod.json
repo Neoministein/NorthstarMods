@@ -105,7 +105,13 @@
 			"Path": "mp/_classic_mp_no_intro.gnut",
 			"RunOn": "SERVER && MP"
 		},
-		
+		{
+			"Path": "mp/ban/sh_ban.gnut",
+			"RunOn": "SERVER && MP",
+			"ServerCallback": {
+				"Before": "BanEquipment_Init"
+			}
+		},
 		{
 			"Path": "_loadouts_mp.gnut",
 			"RunOn": "SERVER && MP",

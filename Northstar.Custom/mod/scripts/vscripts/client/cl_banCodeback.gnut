@@ -1,0 +1,18 @@
+global function ClBanCodeback_Init
+
+void function ClBanCodeback_Init()
+{
+	print("__________                        __     __________      .__        __   ")
+    print("\\______   \\_______   ____ _____  |  | __ \\______   \\____ |__| _____/  |_ ")
+    print(" |    |  _/\\_  __ \\_/ __ \\\\__  \\ |  |/ /  |     ___/  _ \\|  |/    \\   __\\")
+    print(" |    |   \\ |  | \\/\\  ___/ / __ \\|    <   |    |  (  <_> )  |   |  \\  |  ")
+    print(" |______  / |__|    \\___  >____  /__|_ \\  |____|   \\____/|__|___|  /__|  ")
+    print("        \\/              \\/     \\/     \\/                         \\/      ")
+    print("")
+    AddChannelCallbackFunction(11669790, ChannelCallback_BanUi)
+}
+
+void function ChannelCallback_BanUi(int uiToUpdate, int dataSet0, int dataSet1, int dataSet2) 
+{
+	RunUIScript("UpdateBanUI", uiToUpdate, dataSet0, dataSet1, dataSet2)
+}
