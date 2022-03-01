@@ -53,9 +53,167 @@ void function BanEquipment_Init()
     print("        \\/              \\/     \\/     \\/                         \\/      ")
     print("")
 	InitData()
+	AddClientCommandCallback( "BanUiUpdateData", ClientCommandCallback_BanUiUpdateData )
 	AddClientCommandCallback( "BanUiRequestUpdate", ClientCommandCallback_BanUiRequestUpdate )
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///ClientCommandCallback_BanUiUpdateData
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string> args ) 
+{
+	//TODO TEST IF PLAYER IS ALLOWED TO EDIT DATA
+	print("Recive data")
+	if(args.len() == 0) 
+	{
+		return false
+	}
+	
+
+	foreach(string changeData in args) 
+	{
+		print(changeData)
+		array<string> data = split(changeData ,"|")
+
+		if(data.len() < 3) {
+			continue
+		}
+
+		string typeToUpdate = data[0]
+
+		print("1:" + data[0])
+		switch(typeToUpdate) 
+		{
+			case "ability":
+				UpdateAbility(int(data[1]), data[2])
+				break
+			case "weapon":
+				UpdateWeaponFromCategory(int(data[1]), int(data[2]), data[3])
+			case "boost":
+				UpdateBoost(int(data[1]), data[2])
+				break
+
+		}
+	}
+
+	return true
+}
+
+void function UpdateAbility(int index, string data) 
+{
+	UniversalBanStruct structToChange
+
+	if(index < file.abilityArray.len()) 
+	{
+		structToChange = file.abilityArray[index]
+	} 
+	else 
+	{
+		structToChange = file.grenadeArray[index - file.abilityArray.len()]
+	}
+	
+	structToChange.disabled =  (data == "1") ? true : false
+}
+
+void function UpdateWeaponFromCategory(int category, int index, string data) 
+{
+	print("0")
+	switch(category) {
+		case 0:
+			print("1")
+			UpdateWeapon(index, data)
+			break
+		case 1:
+			UpdateWeapon(index + 5, data)
+			break
+		case 2:
+			UpdateWeapon(index + 9, data)
+			break
+		case 3:
+			UpdateWeapon(index + 12, data)
+			break
+		case 4:
+			UpdateWeapon(index + 15, data)
+			break
+		case 5:
+			UpdateWeapon(index + 17, data)
+			break
+		case 6:
+			UpdateWeapon(index + 21, data)
+			break
+		case 7:
+			UpdateWeapon(index + 26, data)
+			break
+	}
+}
+
+void function UpdateBoost(int index, string data) 
+{
+	file.boostArray[index].disabled = (data == "1") ? true : false
+}
+
+void function UpdateWeapon(int index, string data) 
+{
+	WeaponBanStruct structToChange = file.weaponArray[index]
+	print(structToChange.name)
+	array< string > dataAtr = split(data , ",")
+
+	structToChange.disabled =  dataAtr[0] == "1" ? true : false
+	structToChange.mod1 = GetWeaponModStringById(dataAtr[1], structToChange)
+	structToChange.mod2 = GetWeaponModStringById(dataAtr[2], structToChange)
+	structToChange.visor = [GetWeaponVisorStringFromId(dataAtr[3])]
+}
+
+string function GetWeaponModStringById(string id, WeaponBanStruct weaponStruct) 
+{
+	switch(id) 
+	{
+		case "0":
+			return "UNDEFINED"
+		case "1":
+			return "extended_ammo"
+		case "2":
+			return "pas_fast_reload"
+		case "3":
+			return "pas_fast_ads"
+		case "4":
+			return "pas_run_and_gun"
+		case "5":
+			return "tactical_cdr_on_kill"
+		case "6":
+			return "pas_fast_swap"
+		case "7":
+			return ""					
+	}
+	return weaponStruct.uniqueMod
+}
+
+string function GetWeaponVisorStringFromId(string str) 
+{
+	switch(str) 
+	{
+		case "0":
+			return "UNDEFINED"
+		case "1":
+			return "holosight"	
+		case "2":
+			return "hcog"
+		case "3":
+			return "redline_sight"
+		case "4":
+			return "aog"
+		case "5":
+			return "scope_4x"
+		case "6":
+			return "threat_scope"
+		case "7":
+			return ""					
+	}
+	return "UNDEFINED"
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///ClientCommandCallback_BanUiRequestUpdate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool function ClientCommandCallback_BanUiRequestUpdate( entity player, array<string> args ) 
 {
 	if(0 == args.len()) {
@@ -77,6 +235,7 @@ bool function ClientCommandCallback_BanUiRequestUpdate( entity player, array<str
 			{
 				ordinances += banStruct.disabled ? "1" : "0"
 			}
+			print(uiToUpdate + " " + pilotAbilities + " " + ordinances)
 			Remote_CallChannel(player, 11669790, uiToUpdate, int(pilotAbilities), int(ordinances))
 			break
 		case 1: //Assult rifle
@@ -108,19 +267,19 @@ bool function ClientCommandCallback_BanUiRequestUpdate( entity player, array<str
 			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
 			break
 		case 8: // ANTI-TITAN
-			array<int> weaponData = GetBundeledWeaponData (26, 28, 29)
+			array<int> weaponData = GetBundeledWeaponData (26, 27 ,28, 29)
 			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
 			break
 		case 9: // STRYDER
-			array<int> titanData = GetBundeledWeaponData (0, 1)
+			array<int> titanData = GetBundeledTitanData (0, 1)
 			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
 			break
 		case 10: //ATLAS
-			array<int> titanData = GetBundeledWeaponData (2, 3, 4, 5)
+			array<int> titanData = GetBundeledTitanData (2, 3, 4, 5)
 			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
 			break
 		case 11: //OGRE
-			array<int> titanData = GetBundeledWeaponData (6, 7)
+			array<int> titanData = GetBundeledTitanData (6, 7)
 			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
 			break
 		case 12: //BOOST
@@ -160,15 +319,15 @@ string function GetWeaponStringaData(int id)
 	WeaponBanStruct currentStruct = file.weaponArray[id]
 	string data = ""
 	data += currentStruct.disabled ? "1" : "0"
-	data += GetWeaponModById(currentStruct.mod1)
-	data += GetWeaponModById(currentStruct.mod2)
-	data += GetWeaponVisorById(currentStruct.visor[0])
+	data += GetWeaponModIdFromString(currentStruct.mod1)
+	data += GetWeaponModIdFromString(currentStruct.mod2)
+	data += GetWeaponVisorIdFromString(currentStruct.visor[0])
 	return data
 }
 
-string function GetWeaponModById(string id) 
+string function GetWeaponModIdFromString(string str) 
 {
-	switch(id) 
+	switch(str) 
 	{
 		case "UNDEFINED":
 			return "0"
@@ -190,9 +349,9 @@ string function GetWeaponModById(string id)
 	return "8"
 }
 
-string function GetWeaponVisorById(string id) 
+string function GetWeaponVisorIdFromString(string str) 
 {
-	switch(id) 
+	switch(str) 
 	{
 		case "UNDEFINED":
 			return "0"
@@ -235,23 +394,23 @@ string function GetTitanStringaData(int id)
 	if(id != 5) 
 	{
 		data += currentStruct.disabled ? "1" : "0"
-		data += GetTitanPassives(currentStruct.passive1)
-		data += GetTitanKit(currentStruct.passive2, currentStruct.name)
-		data += GetTitanPassives(currentStruct.passive3)
+		data += GetTitanPassiveIdFromStr(currentStruct.passive1)
+		data += GetTitanKitIdFromStr(currentStruct.passive2, currentStruct.name)
+		data += GetTitanPassiveIdFromStr(currentStruct.passive3)
 	} else 
 	{
 		data += "1"
-		data += GetMonarchCores(currentStruct.passive1, 0)
-		data += GetMonarchCores(currentStruct.passive2, 1)
-		data += GetMonarchCores(currentStruct.passive3, 2)
+		data += GetMonarchCoreIdFromString(currentStruct.passive1, 0)
+		data += GetMonarchCoreIdFromString(currentStruct.passive2, 1)
+		data += GetMonarchCoreIdFromString(currentStruct.passive3, 2)
 	}
 
 	return data
 } 
 
-string function GetTitanPassives(string id) 
+string function GetTitanPassiveIdFromStr(string str) 
 {
-	switch(id) 
+	switch(str) 
 	{
 		case "UNDEFINED":
 			return "0"
@@ -275,16 +434,16 @@ string function GetTitanPassives(string id)
 	return "0"
 }
 
-string function GetTitanKit(string id, string titanKit) 
+string function GetTitanKitIdFromStr(string str, string titanKit) 
 {
-	if(id == "UNDEFINED") 
+	if(str == "UNDEFINED") 
 	{
 		return "0"
 	}
 
 	if(titanKit == "ion") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_ion_weapon":
 				return "1"	
@@ -301,7 +460,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "scorch") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_scorch_weapon":
 				return "1"	
@@ -318,7 +477,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "northstar") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_northstar_weapon":
 				return "1"	
@@ -335,7 +494,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "ronin") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_ronin_weapon":
 				return "1"	
@@ -352,7 +511,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "tone") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_tone_weapon":
 				return "1"	
@@ -369,7 +528,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "legion") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_enhanced_titan_ai":
 				return "1"	
@@ -386,7 +545,7 @@ string function GetTitanKit(string id, string titanKit)
 
 	if(titanKit == "vanguard") 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_vanguard_shield":
 				return "1"	
@@ -401,15 +560,15 @@ string function GetTitanKit(string id, string titanKit)
 	return "0"
 }
 
-string function GetMonarchCores(string id, int coreStage) 
+string function GetMonarchCoreIdFromString(string str, int coreStage) 
 {
-	if(id == "UNDEFINED") 
+	if(str == "UNDEFINED") 
 	{
 		return "0"
 	}
 	if(coreStage == 0) 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_vanguard_core1":
 				return "1"	
@@ -422,7 +581,7 @@ string function GetMonarchCores(string id, int coreStage)
 
 	if(coreStage == 1) 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_vanguard_core4":
 				return "1"	
@@ -434,7 +593,7 @@ string function GetMonarchCores(string id, int coreStage)
 	}
 	if(coreStage == 2) 
 	{
-		switch(id) 
+		switch(str) 
 		{
 			case "pas_vanguard_core7":
 				return "1"	

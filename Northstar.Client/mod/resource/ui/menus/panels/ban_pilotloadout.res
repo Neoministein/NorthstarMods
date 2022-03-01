@@ -12,7 +12,7 @@
 		ControlName				RuiButton
 		InheritProperties		SuitButton
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"cloak"
+        scriptID				0
         tabPosition				1
 
         navUp					RenameEditBox
@@ -30,7 +30,7 @@
 		ControlName				RuiButton
 		InheritProperties		SuitButton
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"pulse"
+        scriptID				1
         xpos					-235
 
         navUp					RenameEditBox
@@ -49,7 +49,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"grapple"
+        scriptID				2
         ypos					10
 
         navUp					ButtonSuit
@@ -67,7 +67,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"stim"
+        scriptID				3
         ypos					10
 
         navUp					ButtonSuit
@@ -87,7 +87,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"a-wall"
+        scriptID				4
         ypos					10
 
         navUp					ButtonPrimary
@@ -105,7 +105,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"phase"
+        scriptID				5
         ypos					10
 
         navUp					ButtonPrimary
@@ -125,7 +125,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonLarge
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"holo"
+        scriptID				6
         ypos					10
 
         navUp					ButtonSecondary
@@ -153,7 +153,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"grenade"
+        scriptID				7
 
         navUp					ButtonWeapon3
         navDown					RenameEditBox
@@ -170,7 +170,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"arcGerande"
+        scriptID				8
         xpos					-105
 
         navUp					ButtonWeapon3
@@ -189,7 +189,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"firestar"
+        scriptID				9
         ypos					10
 
         navUp					ButtonWeapon3
@@ -207,7 +207,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"gravstar"
+        scriptID				10
         ypos					10
 
         navUp					ButtonWeapon3
@@ -227,7 +227,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"electricSmoke"
+        scriptID				11
         ypos					10
 
         navUp					ButtonWeapon3
@@ -245,7 +245,7 @@
 		ControlName				RuiButton
 		InheritProperties		LoadoutButtonMedium
         classname				PilotLoadoutPanelButtonClass
-        scriptID				"satchel"
+        scriptID				12
         ypos					10
 
         navUp					ButtonWeapon3

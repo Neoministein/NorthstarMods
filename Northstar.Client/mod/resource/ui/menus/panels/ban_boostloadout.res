@@ -12,7 +12,7 @@
 		ControlName				RuiButton
 		InheritProperties		SuitButton
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"amped_weapons"
+        scriptID				0
         tabPosition				1
 
         navUp					RenameEditBox
@@ -30,7 +30,7 @@
 		ControlName				RuiButton
 		InheritProperties		SuitButton
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"ticks"
+        scriptID				1
         xpos					-235
 
         navUp					RenameEditBox
@@ -47,9 +47,10 @@
     ButtonSentry
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"antipersonnel_sentry"
+        scriptID				2
         ypos					10
 
         navUp					ButtonSuit
@@ -65,9 +66,10 @@
     ButtonMapHack
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"map_hack"
+        scriptID				3
         ypos					10
 
         navUp					ButtonSuit
@@ -85,9 +87,10 @@
     ButtonBattery
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"battery"
+        scriptID				4
         ypos					10
 
         navUp					ButtonPrimary
@@ -103,9 +106,10 @@
     ButtonRadarJammer
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"radar_jammer"
+        scriptID				5
         ypos					10
 
         navUp					ButtonPrimary
@@ -123,9 +127,10 @@
     ButtonTitanSentry
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"antititan_sentry"
+        scriptID				6
         ypos					10
 
         navUp					ButtonSecondary
@@ -141,9 +146,10 @@
     ButtonTitanSmartPistol
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"smart_pistol"
+        scriptID				7
         ypos					10
 
         navUp					ButtonSecondary
@@ -161,9 +167,10 @@
     ButtonPhaseRewind
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"phase_rewind"
+        scriptID				8
         ypos					10
 
         navUp					ButtonSecondary
@@ -179,9 +186,10 @@
     ButtonHardCover
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"shield"
+        scriptID				9
         ypos					10
 
         navUp					ButtonSecondary
@@ -199,9 +207,10 @@
     ButtonHoloPilotNova
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"holo_pilots"
+        scriptID				10
         ypos					10
 
         navUp					ButtonSecondary
@@ -217,9 +226,10 @@
     ButtonDiceRole
     {
 		ControlName				RuiButton
+        InheritProperties		SuitButton
 		InheritProperties		LoadoutButtonLarge
         classname				BoostLoadoutPanelButtonClass
-        scriptID				"random"
+        scriptID				11
         ypos					11
 
         navUp					ButtonSecondary

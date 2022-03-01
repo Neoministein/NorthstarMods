@@ -1,6 +1,7 @@
 global function AddNorthstarCustomMatchSettingsBanMenu
 global function OnMenu_Open
 global function UpdateBanUI
+global function OpenBanMenu
 
 struct BoolAttributte {
   bool disabled = false
@@ -35,7 +36,7 @@ struct Category {
 struct PilotDisplay {
   var loadoutDisplay
 
-  table<string ,BoolAttributte> attributes 
+  array< BoolAttributte > attributes 
 } 
 
 struct LoadoutDisplay {
@@ -53,7 +54,7 @@ struct LoadoutDisplay {
 struct BoostDisplay {
   var loadoutDisplay
 
-  table<string ,BoolAttributte> boosts 
+  array< BoolAttributte > boosts 
 } 
 
 struct {
@@ -75,6 +76,11 @@ void function AddNorthstarCustomMatchSettingsBanMenu()
    AddMenu("CustomMatchBanSettingsMenu", $"resource/ui/menus/custom_match_settings_ban.menu", InitNorthstarCustomMatchSettingsBanMenu, "#MENU_MATCH_SETTINGS")
    AddSubmenu( "customSelectMenu", $"resource/ui/menus/modselect.menu", InitCustomSelectMenu )
 }  
+
+void function OpenBanMenu() 
+{
+  AdvanceMenu( GetMenu( "CustomMatchBanSettingsMenu" ) )
+}
 
 void function InitNorthstarCustomMatchSettingsBanMenu()
 {
@@ -223,22 +229,30 @@ void function clickSelectInSubmenu(var pressedButton)
 {
   int modSelected = rearangeIntToButton(int(Hud_GetScriptID( pressedButton )))
 
-  LoadoutDisplay loadout
+  string uiType
+  LoadoutDisplay loadoutDisplay
   //This defines the screen which calls this button so that weapons and titans can use the same logic
   if (file.selected == 1) {
-    loadout = file.weapon
+    uiType = "weapon"
+    loadoutDisplay = file.weapon
   } else {
-    loadout = file.titan
+    uiType = "titan"
+    loadoutDisplay = file.titan
   }
 
-  if (0 == loadout.selectedAttribute) {
-    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr0 = modSelected
-  } else if (1 == loadout.selectedAttribute) {
-    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr1 = modSelected
+  Loadout loadout = loadoutDisplay.categories[loadoutDisplay.categorySelected].loadouts[loadoutDisplay.selectedLoadout]
+
+  if (0 == loadoutDisplay.selectedAttribute) {
+    loadout.selectedAtr0 = modSelected
+  } else if (1 == loadoutDisplay.selectedAttribute) {
+    loadout.selectedAtr1 = modSelected
   } else {
-    loadout.categories[loadout.categorySelected].loadouts[loadout.selectedLoadout].selectedAtr2 = modSelected
+    loadout.selectedAtr2 = modSelected
   }
-  reloadCurrentScreen()
+  
+  SendLoadoutChangesToServer(uiType, loadoutDisplay.categorySelected, loadoutDisplay.selectedLoadout, ParseLoadoutToDataString(loadout, loadoutDisplay.categorySelected)) 
+
+  reloadActiveUI()
   
   OnModSelectBGScreen_Activate(null)
 }
@@ -392,30 +406,45 @@ void function reloadActiveUI()
 
 void function callPilotButtonClick(var pressedButton) 
 {
-  BoolAttributte attribute = file.pilot.attributes[Hud_GetScriptID( pressedButton )];
+  int id = int( Hud_GetScriptID( pressedButton ) ) 
+  BoolAttributte attribute = file.pilot.attributes[ id ];
   switchBoolAttribute(pressedButton ,attribute)
+
+  SendChangesToServer("ability", id, (attribute.disabled ? "1" : "0"))
 }
 
 void function callBoostClick(var pressedButton) 
 {
-  BoolAttributte attribute = file.boost.boosts[Hud_GetScriptID( pressedButton )];
+  int id = int( Hud_GetScriptID( pressedButton ) ) 
+  BoolAttributte attribute = file.boost.boosts[ id ];
   switchBoolAttribute(pressedButton, attribute)
+
+  SendChangesToServer("boost", id, (attribute.disabled ? "1" : "0"))
 }
 
-void function callWeaponButtonClick(var pressedButton) 
+void function callLoadoutButtonClick(var pressedButton) 
 {
   int id = int(Hud_GetScriptID( Hud_GetParent( pressedButton ) ) )
-  bool state
+  LoadoutDisplay loadoutDisplay
+  string uiType
+
   if(file.selected == 1) 
   {
-    state = !file.weapon.categories[file.weapon.categorySelected].loadouts[id].disabled
-    file.weapon.categories[file.weapon.categorySelected].loadouts[id].disabled = state
+    loadoutDisplay = file.weapon
+    uiType = "weapon"
   } 
   else 
   {
-    state = !file.titan.categories[file.titan.categorySelected].loadouts[id].disabled
-    file.titan.categories[file.titan.categorySelected].loadouts[id].disabled = state
-  } 
+    loadoutDisplay = file.titan
+    uiType = "titan"
+  }
+
+  Loadout loadout = loadoutDisplay.categories[loadoutDisplay.categorySelected].loadouts[id]
+  bool state = !loadout.disabled
+  loadout.disabled = state
+
+  SendLoadoutChangesToServer(uiType, loadoutDisplay.categorySelected, id, ParseLoadoutToDataString(loadout, loadoutDisplay.categorySelected))
+
   Hud_SetSelected( pressedButton , state )
 }
 
@@ -559,7 +588,7 @@ void function reloadBoostScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
   {
-     Hud_SetSelected( button , file.boost.boosts[Hud_GetScriptID(button)].disabled )
+     Hud_SetSelected( button , file.boost.boosts[ int ( Hud_GetScriptID(button) )].disabled )
   }
 }
 
@@ -567,7 +596,7 @@ void function reloadPilotScreen()
 {
   foreach(var button in GetElementsByClassname( file.menu, "PilotLoadoutPanelButtonClass" ))
   {
-    Hud_SetSelected( button , file.pilot.attributes[Hud_GetScriptID(button)].disabled )
+    Hud_SetSelected( button , file.pilot.attributes[ int( Hud_GetScriptID(button) ) ].disabled )
   }
 }
 
@@ -711,9 +740,6 @@ array<int> function parseImportData(string importData)
       case 56:
         importArray.append(8)
         break
-      case 57:
-        importArray.append(9)
-        break
     }
   }
 
@@ -724,6 +750,7 @@ int function importPilotConfig( array<int> config, int count = 0 )
 {
   foreach(BoolAttributte attribute in file.pilot.attributes)
   {
+    print("AA: " + config[count])
     attribute.disabled = (config[count++] == 1) ? true : false
   }
   return count
@@ -746,12 +773,17 @@ int function importWeaponCategoryConfig(int category ,array<int> config, int cou
 
     weapon.disabled = (config[count++] == 1) ? true : false
     
-    weapon.selectedAtr0 = ( arrayContains( weapon.atr0.values, config[count] + "" ) ? config[count] : 0 )
-    count++
-    weapon.selectedAtr1 = ( arrayContains( weapon.atr1.values, config[count] + "" ) ? config[count] : 0 )
-    count++
-    weapon.selectedAtr2 =  ( arrayContains( weapon.atr2.values, config[count] + "" ) ? config[count] : 0 )
-    count++
+    int indexOfAtr
+
+    indexOfAtr = arrayContains( weapon.atr0.values, config[count++] + "" )
+    weapon.selectedAtr0 = ( indexOfAtr != -1 ) ? indexOfAtr : 0 
+
+    indexOfAtr = arrayContains( weapon.atr1.values, config[count++] + "" )
+    weapon.selectedAtr1 = ( indexOfAtr != -1 ) ? indexOfAtr : 0 
+
+    indexOfAtr = arrayContains( weapon.atr2.values, config[count++] + "" )
+    weapon.selectedAtr2 =  ( indexOfAtr != -1 ) ? indexOfAtr : 0 
+
   }
   return count
 }
@@ -772,12 +804,16 @@ int function importTitanCategoryConfig(int category ,array<int> config, int coun
     Loadout titan = file.titan.categories[category].loadouts[i]
     titan.disabled = (config[count++] == 1) ? true : false
 
-    titan.selectedAtr0 = ( arrayContains( titan.atr0.values, config[count] + "" ) ? config[count] : 0 )
-    count++
-    titan.selectedAtr1 = ( arrayContains( titan.atr1.values, config[count] + "" ) ? config[count] : 0 )
-    count++
-    titan.selectedAtr2 = ( arrayContains( titan.atr2.values, config[count] + "" ) ? config[count] : 0 )
-    count++
+    int indexOfAtr
+
+    indexOfAtr = arrayContains( titan.atr0.values, config[count++] + "" )
+    titan.selectedAtr0 = ( indexOfAtr != -1 ) ? indexOfAtr : 0 
+
+    indexOfAtr = arrayContains( titan.atr1.values, config[count++] + "" )
+    titan.selectedAtr1 = ( indexOfAtr != -1 ) ? indexOfAtr : 0 
+    
+    indexOfAtr = arrayContains( titan.atr2.values, config[count++] + "" )
+    titan.selectedAtr2 =  ( indexOfAtr != -1 ) ? indexOfAtr : 0 
     }
     return count
 }
@@ -826,24 +862,24 @@ void function initPilot()
   var lableTwo = Hud_GetChild( file.pilot.loadoutDisplay, "OrdnanceName" )
   SetLabelRuiText( lableTwo, Localize("#MODE_SETTING_BAN_PILOT_ORDINANCE") )
 
-  pilot.attributes["cloak"]   <- createBoolAttributte($"rui/pilot_loadout/suit/geist")
-  pilot.attributes["pulse"]   <- createBoolAttributte($"rui/pilot_loadout/suit/medium")
-  pilot.attributes["grapple"] <- createBoolAttributte($"rui/pilot_loadout/suit/grapple")
-  pilot.attributes["stim"]    <- createBoolAttributte($"rui/pilot_loadout/suit/nomad")
-  pilot.attributes["a-wall"]  <- createBoolAttributte($"rui/pilot_loadout/suit/heavy")
-  pilot.attributes["holo"]    <- createBoolAttributte($"rui/pilot_loadout/suit/light")
-  pilot.attributes["phase"]   <- createBoolAttributte($"rui/pilot_loadout/suit/stalker")
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/geist"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/medium"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/grapple"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/nomad"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/heavy"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/light"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/suit/stalker"))
 
-  pilot.attributes["grenade"]       <- createBoolAttributte( $"rui/pilot_loadout/ordnance/frag_menu")
-  pilot.attributes["arcGerande"]    <- createBoolAttributte($"rui/pilot_loadout/ordnance/arc_grenade_menu")
-  pilot.attributes["firestar"]      <- createBoolAttributte($"rui/pilot_loadout/ordnance/firestar_menu")
-  pilot.attributes["gravstar"]      <- createBoolAttributte( $"rui/pilot_loadout/ordnance/gravity_grenade_menu")
-  pilot.attributes["electricSmoke"] <- createBoolAttributte($"rui/pilot_loadout/ordnance/electric_smoke_menu")
-  pilot.attributes["satchel"]       <- createBoolAttributte($"rui/pilot_loadout/ordnance/satchel_menu")
+  pilot.attributes.append(createBoolAttributte( $"rui/pilot_loadout/ordnance/frag_menu"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/ordnance/arc_grenade_menu"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/ordnance/firestar_menu"))
+  pilot.attributes.append(createBoolAttributte( $"rui/pilot_loadout/ordnance/gravity_grenade_menu"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/ordnance/electric_smoke_menu"))
+  pilot.attributes.append(createBoolAttributte($"rui/pilot_loadout/ordnance/satchel_menu"))
 
   foreach(var button in GetElementsByClassname( file.menu, "PilotLoadoutPanelButtonClass" ))
   {
-    string buttonId = Hud_GetScriptID( button )
+    int buttonId = int(Hud_GetScriptID( button ))
 
     RuiSetImage( Hud_GetRui( button  ), "buttonImage",  pilot.attributes[buttonId].image)
     AddButtonEventHandler( button, UIE_CLICK, callPilotButtonClick )
@@ -1327,7 +1363,7 @@ void function initWeapon()
   array<var> weaponButton = GetElementsByClassname( file.menu, "LoadoutPanelButtonClass" )
 
   for(int i = 0; i < weaponButton.len(); i++) {
-    AddButtonEventHandler( weaponButton[i], UIE_CLICK, callWeaponButtonClick )
+    AddButtonEventHandler( weaponButton[i], UIE_CLICK, callLoadoutButtonClick )
   }  
   
   array<var> modTypeButtons = GetElementsByClassname( file.menu, "HideWhenEditing_0" )
@@ -1725,22 +1761,22 @@ void function initBoost()
   var lableOne = Hud_GetChild( file.boost.loadoutDisplay, "BoostName" )
   SetLabelRuiText( lableOne, Localize("#MODE_SETTING_BAN_BOOST") )
 
-  boost.boosts["amped_weapons"]         <- createBoolAttributte($"rui/menu/boosts/boost_amped_weapons")
-  boost.boosts["ticks"]                 <- createBoolAttributte($"rui/menu/boosts/boost_ticks")
-  boost.boosts["antipersonnel_sentry"]  <- createBoolAttributte($"rui/menu/boosts/boost_antipersonnel_sentry")
-  boost.boosts["map_hack"]              <- createBoolAttributte($"rui/menu/boosts/boost_map_hack")
-  boost.boosts["battery"]               <- createBoolAttributte($"rui/menu/boosts/boost_battery")
-  boost.boosts["radar_jammer"]          <- createBoolAttributte($"rui/menu/boosts/boost_radar_jammer")
-  boost.boosts["antititan_sentry"]      <- createBoolAttributte($"rui/menu/boosts/boost_antititan_sentry")
-  boost.boosts["smart_pistol"]          <- createBoolAttributte($"rui/menu/boosts/boost_smart_pistol")
-  boost.boosts["phase_rewind"]          <- createBoolAttributte($"rui/menu/boosts/boost_phase_rewind")
-  boost.boosts["shield"]                <- createBoolAttributte($"rui/menu/boosts/boost_shield")
-  boost.boosts["holo_pilots"]           <- createBoolAttributte($"rui/menu/boosts/boost_holo_pilots")
-  boost.boosts["random"]                <- createBoolAttributte($"rui/menu/boosts/boost_random")
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_amped_weapons"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_ticks"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_antipersonnel_sentry"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_map_hack"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_battery"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_radar_jammer"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_antititan_sentry"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_smart_pistol"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_phase_rewind"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_shield"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_holo_pilots"))
+  boost.boosts.append(createBoolAttributte($"rui/menu/boosts/boost_random"))
 
   foreach(var button in GetElementsByClassname( file.menu, "BoostLoadoutPanelButtonClass" ))
   {
-    string buttonId = Hud_GetScriptID( button )
+    int buttonId = int( Hud_GetScriptID( button ) )
 
     RuiSetImage( Hud_GetRui( button  ), "buttonImage",  boost.boosts[buttonId].image)
     AddButtonEventHandler( button, UIE_CLICK, callBoostClick )
@@ -1758,6 +1794,8 @@ void function initBoost()
 void function UpdateBanUI( int uiToUpdate , int dataSet0, int dataSet1, int dataSet2) 
 {
   print("Recive update reponse")
+
+  print(dataSet0 + " " + dataSet1 + " " + dataSet2)
   switch(uiToUpdate) 
 	{
 		case 0: //PILOT UI
@@ -1805,17 +1843,49 @@ void function UpdateBanUI( int uiToUpdate , int dataSet0, int dataSet1, int data
   reloadActiveUI()
 }
 
+void function SendChangesToServer(string typeToUpdate, int index, string data) 
+{
+  string dataToSend = typeToUpdate + "|" + index + "|" + data
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
+}
+
+void function SendLoadoutChangesToServer(string typeToUpdate, int category ,int index, string data) 
+{
+  string dataToSend = typeToUpdate + "|" + category + "|" + index + "|" + data
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
+}
+
+string function ParseLoadoutToDataString(Loadout loadout, int category) 
+{
+  string dataToSend = ""
+  dataToSend += (loadout.disabled ? "1" : "0") + "," 
+  dataToSend += loadout.atr0.values[loadout.selectedAtr0] + "," 
+  dataToSend += loadout.atr1.values[loadout.selectedAtr1] + ","
+
+  //Since Titans only have 3 categories I just ban the weapon categories 
+  if(category < 5) {
+     dataToSend += loadout.atr2.values[loadout.selectedAtr2]
+  } 
+  else 
+  {
+    dataToSend += "0"
+  }
+
+  return dataToSend
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Utility
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool function arrayContains(array<string> a, string toCheck) 
+int function arrayContains(array<string> a, string toCheck) 
 {
-  foreach (string s in a) 
+  for(int i = 0; i < a.len(); i++) 
   {
-    if (toCheck == s) {
-      return true
+    if (toCheck == a[i]) {
+      return i
     }
   }
-  return false
+  return -1
 }
