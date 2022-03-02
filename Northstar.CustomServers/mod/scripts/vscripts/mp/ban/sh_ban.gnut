@@ -89,6 +89,10 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 				break
 			case "weapon":
 				UpdateWeaponFromCategory(int(data[1]), int(data[2]), data[3])
+				break
+			case "titan":
+				UpdateTitanFromCategory(int(data[1]), int(data[2]), data[3])
+				break	
 			case "boost":
 				UpdateBoost(int(data[1]), data[2])
 				break
@@ -147,6 +151,21 @@ void function UpdateWeaponFromCategory(int category, int index, string data)
 	}
 }
 
+void function UpdateTitanFromCategory(int category, int index, string data) 
+{
+	switch(category) {
+		case 0:
+			UpdateTitan(index, data)
+			break
+		case 1:
+			UpdateTitan(index + 2, data)
+			break
+		case 2:
+			UpdateTitan(index + 6, data)
+			break
+	}
+}
+
 void function UpdateBoost(int index, string data) 
 {
 	file.boostArray[index].disabled = (data == "1") ? true : false
@@ -155,13 +174,34 @@ void function UpdateBoost(int index, string data)
 void function UpdateWeapon(int index, string data) 
 {
 	WeaponBanStruct structToChange = file.weaponArray[index]
-	print(structToChange.name)
 	array< string > dataAtr = split(data , ",")
 
 	structToChange.disabled =  dataAtr[0] == "1" ? true : false
 	structToChange.mod1 = GetWeaponModStringById(dataAtr[1], structToChange)
 	structToChange.mod2 = GetWeaponModStringById(dataAtr[2], structToChange)
 	structToChange.visor = [GetWeaponVisorStringFromId(dataAtr[3])]
+}
+
+void function UpdateTitan(int index, string data) 
+{
+	print(data)
+	TitanBanStruct structToChange = file.titanArray[index]
+	array< string > dataAtr = split(data , ",")
+
+	if( index != 5) 
+	{
+		structToChange.disabled =  dataAtr[0] == "1" ? true : false
+		structToChange.passive1 = GetTitanKitStringFromId(dataAtr[1], structToChange.name ) 
+		structToChange.passive2 = GetTitanPassiveStringFromId(dataAtr[2])
+		structToChange.passive3 = GetTitanPassiveStringFromId(dataAtr[3])
+	} 
+	else {
+		structToChange.passive1 = GetMonarchCoreStringFromId(dataAtr[1], 0)
+		structToChange.passive2 = GetMonarchCoreStringFromId(dataAtr[2], 1)
+		structToChange.passive3 = GetMonarchCoreStringFromId(dataAtr[3], 2)
+	}
+	print("A: " + structToChange.passive1 + " " + structToChange.passive2 + " " + structToChange.passive3)
+	
 }
 
 string function GetWeaponModStringById(string id, WeaponBanStruct weaponStruct) 
@@ -208,6 +248,204 @@ string function GetWeaponVisorStringFromId(string str)
 			return "threat_scope"
 		case "7":
 			return ""					
+	}
+	return "UNDEFINED"
+}
+
+string function GetTitanPassiveStringFromId(string str) 
+{
+	switch(str) 
+	{
+		case "0":
+			return "UNDEFINED"
+		case "1":
+			return "pas_enhanced_titan_ai"	
+		case "2":
+			return "pas_auto_eject"
+		case "3":
+			return "pas_mobility_dash_capacity"
+		case "4": 
+			return "pas_hyper_core"
+		case "5":
+			return "pas_build_up_nuclear_core"
+		case "6":
+			return "pas_anti_rodeo"	
+		case "7":
+			return "pas_bubbleshield"
+		case "8":
+			return "pas_warpfall"						
+	}
+	return "UNDEFINED"
+}
+
+string function GetTitanKitStringFromId(string str, string titanKit) 
+{
+	if(str == "0") 
+	{
+		return "UNDEFINED"
+	}
+
+	if(titanKit == "ion") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_ion_weapon"	
+			case "pas_ion_tripwire":
+				return "2"
+			case "3":
+				return "pas_ion_vortex"
+			case "4": 
+				return "pas_ion_lasercannon"	
+			case "5": 
+				return "pas_ion_weapon_ads"									
+		}
+	}
+
+	if(titanKit == "scorch") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_scorch_weapon"	
+			case "2":
+				return "pas_scorch_selfdmg"
+			case "3":
+				return "pas_scorch_shield"
+			case "4": 
+				return "pas_scorch_firewall"	
+			case "5": 
+				return "pas_scorch_flamecore"						
+		}
+	}
+
+	if(titanKit == "northstar") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_northstar_weapon"	
+			case "2":
+				return "pas_northstar_cluster"
+			case "3":
+				return "pas_northstar_trap"
+			case "4": 
+				return "pas_northstar_flightcore"
+			case "5": 
+				return "pas_northstar_optics"						
+		}
+	}
+
+	if(titanKit == "ronin") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_ronin_weapon"	
+			case "2":
+				return "pas_ronin_arcwave"
+			case "3":
+				return "pas_ronin_phase"
+			case "4": 
+				return "pas_ronin_swordcore"
+			case "5": 
+				return "pas_ronin_autoshift"			
+		}
+	}
+
+	if(titanKit == "tone") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_tone_weapon"	
+			case "2":
+				return "pas_tone_wall"
+			case "3":
+				return "pas_tone_sonar"
+			case "4": 
+				return "pas_tone_rockets"
+			case "5": 
+				return "pas_tone_burst"	
+		}
+	}
+
+	if(titanKit == "legion") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_enhanced_titan_ai"	
+			case "2":
+				return "pas_legion_smartcore"
+			case "3":
+				return "pas_legion_gunshield"
+			case "4": 
+				return "pas_legion_spinup"
+			case "5": 
+				return "pas_legion_chargeshot"
+		}
+	}
+
+	if(titanKit == "vanguard") 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_vanguard_shield"	
+			case "2":
+				return "pas_vanguard_coremeter"
+			case "3":
+				return "pas_vanguard_rearm"
+			case "4": 
+				return "pas_vanguard_doom"						
+		}
+	}
+	return "UNDEFINED"
+}
+
+string function GetMonarchCoreStringFromId(string str, int coreStage) 
+{
+	if(str == "0") 
+	{
+		return "UNDEFINED"
+	}
+	if(coreStage == 0) 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_vanguard_core1"	
+			case "2":
+				return "pas_vanguard_core2"
+			case "3":
+				return "pas_vanguard_core3"
+		}
+	}
+
+	if(coreStage == 1) 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_vanguard_core4"	
+			case "2":
+				return "pas_vanguard_core5"
+			case "3":
+				return "pas_vanguard_core6"
+		}
+	}
+	if(coreStage == 2) 
+	{
+		switch(str) 
+		{
+			case "1":
+				return "pas_vanguard_core7"	
+			case "2":
+				return "pas_vanguard_core8"
+			case "3":
+				return "pas_vanguard_core9"
+		}
 	}
 	return "UNDEFINED"
 }
@@ -394,8 +632,8 @@ string function GetTitanStringaData(int id)
 	if(id != 5) 
 	{
 		data += currentStruct.disabled ? "1" : "0"
-		data += GetTitanPassiveIdFromStr(currentStruct.passive1)
-		data += GetTitanKitIdFromStr(currentStruct.passive2, currentStruct.name)
+		data += GetTitanKitIdFromStr(currentStruct.passive1, currentStruct.name)
+		data += GetTitanPassiveIdFromStr(currentStruct.passive2)
 		data += GetTitanPassiveIdFromStr(currentStruct.passive3)
 	} else 
 	{
@@ -449,7 +687,7 @@ string function GetTitanKitIdFromStr(string str, string titanKit)
 				return "1"	
 			case "pas_ion_tripwire":
 				return "2"
-			case "passive2 pas_ion_vortex":
+			case "pas_ion_vortex":
 				return "3"
 			case "pas_ion_lasercannon": 
 				return "4"	
@@ -468,7 +706,7 @@ string function GetTitanKitIdFromStr(string str, string titanKit)
 				return "2"
 			case "pas_scorch_shield":
 				return "3"
-			case "passive2 pas_scorch_firewall": 
+			case "pas_scorch_firewall": 
 				return "4"	
 			case "pas_scorch_flamecore": 
 				return "5"						
@@ -539,7 +777,7 @@ string function GetTitanKitIdFromStr(string str, string titanKit)
 			case "pas_legion_spinup": 
 				return "4"
 			case "pas_legion_chargeshot": 
-				return "4"
+				return "5"
 		}
 	}
 
