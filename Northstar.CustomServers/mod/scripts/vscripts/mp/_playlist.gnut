@@ -34,7 +34,6 @@ void function OnGamestartModeSettings()
 
 void function FeaturedModeSettingsSetupPilotLoadouts( entity player)
 {
-	Remote_CallFunction_NonReplay( player, "ServerCallback_BanTest" )
 	if ( IsFeaturedMode( "all_holopilot" ) || IsFeaturedMode( "all_grapple" ) || 
 		 IsFeaturedMode( "all_phase" ) || IsFeaturedMode( "all_ticks" ) || 
 		 IsFeaturedMode( "rocket_arena" ) || IsFeaturedMode( "shotguns_snipers" ) || 

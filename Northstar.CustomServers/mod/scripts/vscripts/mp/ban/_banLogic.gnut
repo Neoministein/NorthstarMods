@@ -24,6 +24,7 @@ void function BanLogic_Init()
 	}
 
 	AddCallback_GameStateEnter( eGameState.Playing, TitanEarning_OnPlaying )
+
 }
 
 void function TitanEarning_OnPlaying()
@@ -68,7 +69,7 @@ void function TitanEarning_TitanEarned( entity player )
 }
 
 
-// TODO add all calbacks , put everything into functs , stesstest, look into titant respawn banlogic  aka on lts / titanBrawl , maybe look into changing loadout when ejecting in lts (all the other mods ignore it)
+// TODO  stesstest, look into titant respawn banlogic  aka on lts / titanBrawl , maybe look into changing loadout when ejecting in lts (all the other mods ignore it)
 
 void function BanLogicInGame(entity player)
 {
@@ -110,7 +111,7 @@ void function BanLogicInGame(entity player)
         
 	for(int CheckingWeapon = 0; CheckingWeapon < getWeaponBanData().len(); CheckingWeapon++ )
 	{
-		WeaponBanStruct weapon = getWeaponBanData()[CheckingWeapon]
+		 weapon = getWeaponBanData()[CheckingWeapon]
 
 		//check Primary
 		if(modifiedLoadout.primary == weapon.name && weapon.disabled)
@@ -120,11 +121,12 @@ void function BanLogicInGame(entity player)
 				
 			WeaponBanStruct newWeapon = GetFirstAvailablePrimaryWeapon()
 			
-			modifiedLoadout.primaryAttachments = [""];
-			
 			if (newWeapon.name != "Null" )
 			{ 
 				modifiedLoadout.primary = newWeapon.name
+
+				modifiedLoadout.primaryAttachments = newWeapon.visor
+				
 				message += "primary changet to: " + newWeapon.name +" \n"
 				// if mod1 is forced && mod 2 is free and its the same as forced mod1 we ignore it, but you can do it if  you want  tf2 wont crash
 				if( newWeapon.mod1 != "UNDEFINED")
@@ -138,6 +140,17 @@ void function BanLogicInGame(entity player)
 					modifiedLoadout.primaryMods[1] = newWeapon.mod2
 					modifiedLoadout.primaryAttachments = newWeapon.visor
 				}	
+
+				if( newWeapon.visor[0] != "UNDEFINED" )
+				{
+					modifiedLoadout.primaryAttachments = newWeapon.visor
+				}
+				else
+				{
+					// thanks tf 2 for hating me and not letting me decale the string array in line 150 
+					array<string> ironSight = [""] 
+					modifiedLoadout.primaryAttachments = [""]
+				}
 			}
 			else
 			{
@@ -454,8 +467,8 @@ TitanBanStruct function GetFirstAvailableTitan()
 void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLoadout)	
 {
 	
-		print("----------------------------------------------------------- BEFORE CHANGE")
-		PrintTitanLoadout(currentTitanLoadout)
+		//print("----------------------------------------------------------- BEFORE CHANGE")
+		//PrintTitanLoadout(currentTitanLoadout)
 
 		int titanLoadoutIndex 
 		TitanBanStruct	titanStruct
