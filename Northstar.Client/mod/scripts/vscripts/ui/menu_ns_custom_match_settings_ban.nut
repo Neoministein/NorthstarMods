@@ -644,7 +644,12 @@ void function setAllAttributes(bool enabled)
   {
     attribute.disabled = !enabled
   }
-  reloadCurrentScreen()
+
+  sendPilotConfig()
+  sendWeaponConfig()
+  sendTitanConfig()
+  sendBoostConfig()
+  reloadActiveUI()
 }
 
 void function exportConfigToString(var pressedButton) 
@@ -653,11 +658,7 @@ void function exportConfigToString(var pressedButton)
   //Pilot
   foreach(BoolAttributte attribute in file.pilot.attributes)
   {
-    if(attribute.disabled) {
-      exportString += string(1)
-    } else {
-      exportString += string(0)
-    }
+    exportString += attribute.disabled ? "1" : "0"
   }
   //Weapon
   for(int i = 0; i < file.weapon.categories.len();i++) 
@@ -665,17 +666,14 @@ void function exportConfigToString(var pressedButton)
     for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
     {
       Loadout weapon = file.weapon.categories[i].loadouts[j]
-      if(weapon.disabled) {
-        exportString += string(1)
-      } else {
-        exportString += string(0)
-      }
+      exportString += weapon.disabled ? "1" : "0"
+
       exportString += weapon.atr0.values[weapon.selectedAtr0]
       exportString += weapon.atr1.values[weapon.selectedAtr1]
       try {
         exportString += weapon.atr2.values[weapon.selectedAtr2]
       } catch (exception) {
-        exportString += 0 + ""
+        exportString += "0"
       }
     }
   }
@@ -685,11 +683,8 @@ void function exportConfigToString(var pressedButton)
     for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
     {
       Loadout titan = file.titan.categories[i].loadouts[j]
-      if(titan.disabled) {
-        exportString += string(1)
-      } else {
-        exportString += string(0)
-      }
+      exportString += titan.disabled ? "1" : "0"
+
       exportString += titan.atr0.values[titan.selectedAtr0]
       exportString += titan.atr1.values[titan.selectedAtr1]
       exportString += titan.atr2.values[titan.selectedAtr2]
@@ -698,74 +693,31 @@ void function exportConfigToString(var pressedButton)
   //Boost
   foreach(BoolAttributte attribute in file.boost.boosts)
   {
-    if(attribute.disabled) {
-      exportString += string(1)
-    } else {
-      exportString += string(0)
-    }
+    exportString += attribute.disabled ? "1" : "0"
   }
 
   Hud_SetText( Hud_GetChild( file.menu, "ImportExportArea" ), exportString )
 }
 
-array<int> function parseImportData(string importData) 
-{
-  array<int> importArray
-  for(int i = 0; i < importData.len(); i++) {
-    switch (importData[i]) {
-      case 48:
-        importArray.append(0)
-        break
-      case 49:
-        importArray.append(1)
-        break
-      case 50:
-        importArray.append(2)
-        break
-      case 51:
-        importArray.append(3)
-        break
-      case 52:
-        importArray.append(4)
-        break
-      case 53:
-        importArray.append(5)
-        break
-      case 54:
-        importArray.append(6)
-        break
-      case 55:
-        importArray.append(7)
-        break
-      case 56:
-        importArray.append(8)
-        break
-    }
-  }
-
-  return importArray
-}
-
-int function importPilotConfig( array<int> config, int count = 0 ) 
+int function importPilotUIConfig( array<int> config, int count = 0 ) 
 {
   foreach(BoolAttributte attribute in file.pilot.attributes)
   {
-    print("AA: " + config[count])
     attribute.disabled = (config[count++] == 1) ? true : false
   }
   return count
 }
 
-int function importWeaponConfig( array<int> config, int count = 0 ) 
+int function importWeaponUIConfig( array<int> config, int count = 0 ) 
 {
   for(int i = 0; i < file.weapon.categories.len();i++) 
   {
-    count = importWeaponCategoryConfig(i, config, count)
+    count = importWeaponCategoryUIConfig(i, config, count)
   }
   return count
 }
 
-int function importWeaponCategoryConfig(int category ,array<int> config, int count = 0 ) 
+int function importWeaponCategoryUIConfig(int category ,array<int> config, int count = 0 ) 
 {
   for(int i = 0; i < file.weapon.categories[category].loadouts.len(); i++) 
   {
@@ -788,16 +740,16 @@ int function importWeaponCategoryConfig(int category ,array<int> config, int cou
   return count
 }
 
-int function importTitanConfig( array<int> config, int count = 0 ) 
+int function importTitanUIConfig( array<int> config, int count = 0 ) 
 {
   for(int i = 0; i < file.titan.categories.len(); i++) 
   {
-    count = importTitanCategoryConfig(i, config, count)
+    count = importTitanCategoryUIConfig(i, config, count)
   }
   return count
 }
 
-int function importTitanCategoryConfig(int category ,array<int> config, int count = 0 ) 
+int function importTitanCategoryUIConfig(int category ,array<int> config, int count = 0 ) 
 {
   for(int i = 0; i < file.titan.categories[category].loadouts.len(); i++) 
   {
@@ -818,7 +770,7 @@ int function importTitanCategoryConfig(int category ,array<int> config, int coun
     return count
 }
 
-int function importBoostConfig( array<int> config, int count = 0 ) 
+int function importBoostUIConfig( array<int> config, int count = 0 ) 
 {
   foreach(BoolAttributte attribute in file.boost.boosts)
   {
@@ -841,10 +793,19 @@ void function importConfigToString(var pressedButton)
     return
   }
 
-  count = importPilotConfig(importArray, count)  
-  count = importWeaponConfig(importArray, count)
-  count = importTitanConfig(importArray, count)
-  count = importBoostConfig(importArray, count)
+  
+
+  count = importPilotUIConfig(importArray, count)
+  count = importWeaponUIConfig(importArray, count)
+  count = importTitanUIConfig(importArray, count)
+  count = importBoostUIConfig(importArray, count)
+
+
+  sendPilotConfig()
+  sendWeaponConfig()
+  sendTitanConfig()
+  sendBoostConfig()
+
   reloadCurrentScreen() 
 }
 
@@ -1799,48 +1760,114 @@ void function UpdateBanUI( int uiToUpdate , int dataSet0, int dataSet1, int data
   switch(uiToUpdate) 
 	{
 		case 0: //PILOT UI
-      importPilotConfig(parseImportData( dataSet0 + "" + dataSet1))
+      importPilotUIConfig(parseImportData( dataSet0 + "" + dataSet1))
 			break
 		case 1: //Assult rifle
-      importWeaponCategoryConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 2: //SMG
-      importWeaponCategoryConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 3: // LMG
-      importWeaponCategoryConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 4: // SNIPER
-      importWeaponCategoryConfig(3, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(3, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 5: // SHOTGUN
-      importWeaponCategoryConfig(4, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(4, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 6: // GRENADIER
-      importWeaponCategoryConfig(5, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(5, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 7: // PISTOL
-      importWeaponCategoryConfig(6, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(6, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 8: // ANTI-TITAN
-      importWeaponCategoryConfig(7, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importWeaponCategoryUIConfig(7, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 9: // STRYDER
-      importTitanCategoryConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importTitanCategoryUIConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 10: //ATLAS
-      importTitanCategoryConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importTitanCategoryUIConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 11: //OGRE
-      importTitanCategoryConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importTitanCategoryUIConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			break
 		case 12: //BOOST
-      importBoostConfig(parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
+      importBoostUIConfig(parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
 			//Is split into two due to max int being 10 characters
 			break
 	}
 
   reloadActiveUI()
+}
+
+void function sendPilotConfig() 
+{
+  string dataToSend = ""
+  
+  for(int i = 0; i < file.pilot.attributes.len(); i++) 
+  {
+    BoolAttributte structData = file.pilot.attributes[i]
+    dataToSend += " ability|" + i + "|" + (structData.disabled ? "1" : "0")
+  }
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
+}
+
+void function sendWeaponConfig() 
+{
+  string dataToSend = ""
+  for(int i = 0; i < file.weapon.categories.len();i++) 
+  {
+      for(int j = 0; j < file.weapon.categories[i].loadouts.len(); j++) 
+      {
+      Loadout weapon = file.weapon.categories[i].loadouts[j]
+
+      dataToSend += " weapon|" + i + "|" + j +"|"
+      dataToSend += (weapon.disabled ? "1" : "0")
+      dataToSend += weapon.atr0.values[weapon.selectedAtr0]
+      dataToSend += weapon.atr1.values[weapon.selectedAtr1]
+      dataToSend += (i < 5) ? weapon.atr2.values[weapon.selectedAtr2] : "0"
+      }
+  }
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
+}
+
+void function sendTitanConfig() 
+{
+  string dataToSend = ""
+  for(int i = 0; i < file.titan.categories.len(); i++) 
+  {
+    for(int j = 0; j < file.titan.categories[i].loadouts.len(); j++) 
+    {
+      Loadout titan = file.titan.categories[i].loadouts[j]
+
+      dataToSend += " titan|" + i + "|" + j +"|"
+      dataToSend += (titan.disabled ? "1" : "0")
+      dataToSend += titan.atr0.values[titan.selectedAtr0]
+      dataToSend += titan.atr1.values[titan.selectedAtr1]
+      dataToSend += titan.atr2.values[titan.selectedAtr2]
+    }
+  }
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
+}
+
+void function sendBoostConfig() 
+{
+  string dataToSend = ""
+  
+  for(int i = 0; i < file.boost.boosts.len(); i++) 
+  {
+    BoolAttributte structData = file.boost.boosts[i]
+    dataToSend += " boost|" + i + "|" + (structData.disabled ? "1" : "0")
+  }
+
+  ClientCommand("BanUiUpdateData " + dataToSend)
 }
 
 void function SendChangesToServer(string typeToUpdate, int index, string data) 
@@ -1860,9 +1887,9 @@ void function SendLoadoutChangesToServer(string typeToUpdate, int category ,int 
 string function ParseLoadoutToDataString(Loadout loadout, int category) 
 {
   string dataToSend = ""
-  dataToSend += (loadout.disabled ? "1" : "0") + "," 
-  dataToSend += loadout.atr0.values[loadout.selectedAtr0] + "," 
-  dataToSend += loadout.atr1.values[loadout.selectedAtr1] + ","
+  dataToSend += (loadout.disabled ? "1" : "0") 
+  dataToSend += loadout.atr0.values[loadout.selectedAtr0]
+  dataToSend += loadout.atr1.values[loadout.selectedAtr1] 
 
   //Since Titans only have 3 categories I just ban the weapon categories 
   if(category < 5) {
@@ -1888,4 +1915,41 @@ int function arrayContains(array<string> a, string toCheck)
     }
   }
   return -1
+}
+
+array<int> function parseImportData(string importData) 
+{
+  array<int> importArray
+  for(int i = 0; i < importData.len(); i++) {
+    switch (importData[i]) {
+      case 48:
+        importArray.append(0)
+        break
+      case 49:
+        importArray.append(1)
+        break
+      case 50:
+        importArray.append(2)
+        break
+      case 51:
+        importArray.append(3)
+        break
+      case 52:
+        importArray.append(4)
+        break
+      case 53:
+        importArray.append(5)
+        break
+      case 54:
+        importArray.append(6)
+        break
+      case 55:
+        importArray.append(7)
+        break
+      case 56:
+        importArray.append(8)
+        break
+    }
+  }
+  return importArray
 }
