@@ -112,6 +112,15 @@
 				"Before": "BanEquipment_Init"
 			}
 		},
+		
+		{
+            "Path": "mp/ban/_banLogic.gnut",
+            "RunOn": "SERVER && MP",
+            "ServerCallback": {
+                "Before": "BanLogic_Init"
+            }
+        },
+		
 		{
 			"Path": "_loadouts_mp.gnut",
 			"RunOn": "SERVER && MP",
