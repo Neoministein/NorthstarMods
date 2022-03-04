@@ -45,14 +45,8 @@ struct {
 
 void function BanEquipment_Init()
 {
-	print("__________                        __     __________      .__        __   ")
-    print("\\______   \\_______   ____ _____  |  | __ \\______   \\____ |__| _____/  |_ ")
-    print(" |    |  _/\\_  __ \\_/ __ \\\\__  \\ |  |/ /  |     ___/  _ \\|  |/    \\   __\\")
-    print(" |    |   \\ |  | \\/\\  ___/ / __ \\|    <   |    |  (  <_> )  |   |  \\  |  ")
-    print(" |______  / |__|    \\___  >____  /__|_ \\  |____|   \\____/|__|___|  /__|  ")
-    print("        \\/              \\/     \\/     \\/                         \\/      ")
-    print("")
 	InitData()
+	//TODO GET DATA FROM PERSISTENT
 	AddClientCommandCallback( "BanUiUpdateData", ClientCommandCallback_BanUiUpdateData )
 	AddClientCommandCallback( "BanUiRequestUpdate", ClientCommandCallback_BanUiRequestUpdate )
 }
@@ -63,6 +57,12 @@ void function BanEquipment_Init()
 bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string> args ) 
 {
 	//TODO TEST IF PLAYER IS ALLOWED TO EDIT DATA
+	if ( GetConVarInt( "ns_private_match_only_host_can_change_settings" ) >= 1 )
+		if ( !NSIsPlayerIndexLocalPlayer( player.GetPlayerIndex() ) )
+			return true
+		
+
+
 	print("Recive data")
 	if(args.len() == 0) 
 	{
@@ -174,7 +174,7 @@ void function UpdateBoost(int index, string data)
 void function UpdateWeapon(int index, string data) 
 {
 	WeaponBanStruct structToChange = file.weaponArray[index]
-	array< string > dataAtr = split(data , ",")
+	array< string > dataAtr = parseImportData(data)
 
 	structToChange.disabled =  dataAtr[0] == "1" ? true : false
 	structToChange.mod1 = GetWeaponModStringById(dataAtr[1], structToChange)
@@ -186,7 +186,7 @@ void function UpdateTitan(int index, string data)
 {
 	print(data)
 	TitanBanStruct structToChange = file.titanArray[index]
-	array< string > dataAtr = split(data , ",")
+	array< string > dataAtr = parseImportData(data)
 
 	if( index != 5) 
 	{
@@ -993,4 +993,56 @@ TitanBanStruct function createTitanBanStruct(string name, bool disabled = false)
 	newStruct.passive2 = "UNDEFINED"
 	newStruct.passive3 = "UNDEFINED"
 	return newStruct
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Utility
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int function arrayContains(array<string> a, string toCheck) 
+{
+  for(int i = 0; i < a.len(); i++) 
+  {
+    if (toCheck == a[i]) {
+      return i
+    }
+  }
+  return -1
+}
+
+array< string > function parseImportData(string importData) 
+{
+  array< string > importArray
+  for(int i = 0; i < importData.len(); i++) {
+    switch (importData[i]) {
+      case 48:
+        importArray.append("0")
+        break
+      case 49:
+        importArray.append("1")
+        break
+      case 50:
+        importArray.append("2")
+        break
+      case 51:
+        importArray.append("3")
+        break
+      case 52:
+        importArray.append("4")
+        break
+      case 53:
+        importArray.append("5")
+        break
+      case 54:
+        importArray.append("6")
+        break
+      case 55:
+        importArray.append("7")
+        break
+      case 56:
+        importArray.append("8")
+        break
+    }
+  }
+  return importArray
 }
