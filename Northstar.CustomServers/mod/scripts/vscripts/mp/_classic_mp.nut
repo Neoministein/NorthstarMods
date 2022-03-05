@@ -1,8 +1,6 @@
 untyped
 global function ClassicMp_Init
 global function ClassicMP_TryDefaultIntroSetup 
-global function ClassicMP_SetShouldTryIntroAndEpilogueWithoutClassicMP
-global function ClassicMP_ShouldTryIntroAndEpilogueWithoutClassicMP
 
 // intro setups
 global function	ClassicMP_SetLevelIntro
@@ -23,8 +21,6 @@ global function ClassicMP_ShouldRunEpilogue
 global function GetClassicMPMode
 
 struct {
-	bool shouldTryIntroAndEpilogueWithoutClassicMP = false
-
 	// level intros have a lower priority than custom intros
 	// level intros are used only if a custom intro was not specified
 	void functionref() levelIntroSetupFunc
@@ -50,18 +46,7 @@ void function ClassicMp_Init()
 // stub func, called in mp_sh_init
 void function ClassicMP_TryDefaultIntroSetup()
 {
-}
 
-// this is for custom intros that might not want to use the preexisting classic_mp logic on client
-// in particular, tf1 campaign intros don't do this
-void function ClassicMP_SetShouldTryIntroAndEpilogueWithoutClassicMP( bool shouldTryIntroAndEpilogueWithoutClassicMP )
-{
-	file.shouldTryIntroAndEpilogueWithoutClassicMP = shouldTryIntroAndEpilogueWithoutClassicMP
-}
-
-bool function ClassicMP_ShouldTryIntroAndEpilogueWithoutClassicMP()
-{
-	return file.shouldTryIntroAndEpilogueWithoutClassicMP
 }
 
 void function ClassicMP_SetLevelIntro( void functionref() setupFunc, float introLength )

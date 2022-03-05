@@ -4,11 +4,12 @@ untyped
 global function AddNorthstarServerBrowserMenu
 global function ThreadedAuthAndConnectToServer
 
+global function UpdateMouseDeltaBuffer
 
 // Stop peeking
 
 const int BUTTONS_PER_PAGE = 15
-const float DOUBLE_CLICK_TIME_MS = 0.4 // unsure what the ideal value is
+const float DOUBLE_CLICK_TIME_MS = 0.2 // unsure what the ideal value is
 
 
 struct {
@@ -27,17 +28,6 @@ struct {
 	array<string> filterGamemodes
 	string filterGamemode
 } filterArguments
-
-
-enum sortingBy
-{
-	NONE,
-	NAME,
-	PLAYERS,
-	MAP,
-	GAMEMODE,
-	LATENCY
-}
 
 struct {
 	// true = alphabeticaly false = reverse
@@ -110,22 +100,22 @@ void function UpdatePrivateMatchModesAndMaps()
 	{
 		if ( filterArguments.filterMaps.find( map ) != -1 )
 			continue
-
+			
 		filterArguments.filterMaps.append( map )
-
+		
 		string localized = GetMapDisplayName( map )
 		Hud_DialogList_AddListItem( Hud_GetChild( file.menu, "SwtBtnSelectMap" ) , localized, string( enum_ + 1 ) )
-	}
-
+	}		
+	
 	array<string> realModes = [ "private_match" ]
 	realModes.extend( GetPrivateMatchModes() )
-
+	
 	foreach( int enum_, string mode in realModes )
 	{
 		string localized = GetGameModeDisplayName( mode )
 		if ( filterArguments.filterGamemodes.find( localized ) != -1 )
 			continue
-
+		
 		filterArguments.filterGamemodes.append( localized )
 		Hud_DialogList_AddListItem( Hud_GetChild( file.menu, "SwtBtnSelectGamemode" ) , localized, string( enum_ + 1 ) )
 	}
@@ -134,8 +124,6 @@ void function UpdatePrivateMatchModesAndMaps()
 void function InitServerBrowserMenu()
 {
 	file.menu = GetMenu( "ServerBrowserMenu" )
-
-	AddMouseMovementCaptureHandler( file.menu, UpdateMouseDeltaBuffer )
 
 	// Get menu stuff
 	file.serverButtons = GetElementsByClassname( file.menu, "ServerButton" )
@@ -148,7 +136,7 @@ void function InitServerBrowserMenu()
 
 	filterArguments.filterMaps = [ "SWITCH_ANY" ]
 	Hud_DialogList_AddListItem( Hud_GetChild( file.menu, "SwtBtnSelectMap" ), "SWITCH_ANY", "0" )
-
+	
 	filterArguments.filterGamemodes = [ "SWITCH_ANY" ]
 	Hud_DialogList_AddListItem( Hud_GetChild( file.menu, "SwtBtnSelectGamemode" ), "SWITCH_ANY", "0" )
 
@@ -156,7 +144,7 @@ void function InitServerBrowserMenu()
 	AddMenuEventHandler( file.menu, eUIEvent.MENU_CLOSE, OnCloseServerBrowserMenu )
 	AddMenuEventHandler( file.menu, eUIEvent.MENU_OPEN, OnServerBrowserMenuOpened )
 	AddMenuFooterOption( file.menu, BUTTON_B, "#B_BUTTON_BACK", "#BACK" )
-	AddMenuFooterOption( file.menu, BUTTON_Y, PrependControllerPrompts( BUTTON_Y, "#REFRESH_SERVERS" ), "#REFRESH_SERVERS", RefreshServers )
+	AddMenuFooterOption( file.menu, BUTTON_Y, "#Y_REFRESH_SERVERS", "#REFRESH_SERVERS", RefreshServers )
 
 	// Setup server buttons
 	var width = 1120.0  * (GetScreenSize()[1] / 1080.0)
@@ -183,11 +171,11 @@ void function InitServerBrowserMenu()
 	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnFiltersClear"), UIE_CLICK, OnBtnFiltersClear_Activate )
 
 
-	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerNameTab"), UIE_CLICK, SortServerListByName_Activate )
-	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerPlayersTab"), UIE_CLICK, SortServerListByPlayers_Activate )
-	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerMapTab"), UIE_CLICK, SortServerListByMap_Activate )
-	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerGamemodeTab"), UIE_CLICK, SortServerListByGamemode_Activate )
-	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerLatencyTab"), UIE_CLICK, SortServerListByLatency_Activate )
+	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerNameTab"), UIE_CLICK, SortServerListByName )
+	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerPlayersTab"), UIE_CLICK, SortServerListByPlayers )
+	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerMapTab"), UIE_CLICK, SortServerListByMap )
+	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerGamemodeTab"), UIE_CLICK, SortServerListByGamemode )
+	AddButtonEventHandler( Hud_GetChild( file.menu, "BtnServerLatencyTab"), UIE_CLICK, SortServerListByLatency )
 
 
 	AddButtonEventHandler( Hud_GetChild( file.menu, "SwtBtnSelectMap"), UIE_CHANGE, FilterAndUpdateList )
@@ -290,12 +278,10 @@ void function UpdateListSliderHeight( float servers )
 	var movementCapture = Hud_GetChild( file.menu , "MouseMovementCapture" )
 
 	float maxHeight = 562.0 * (GetScreenSize()[1] / 1080.0)
-	float minHeight = 80.0 * (GetScreenSize()[1] / 1080.0)
 
 	float height = maxHeight * (15.0 / servers )
 
 	if ( height > maxHeight ) height = maxHeight
-	if ( height < minHeight ) height = minHeight
 
 	Hud_SetHeight( sliderButton , height )
 	Hud_SetHeight( sliderPanel , height )
@@ -405,8 +391,6 @@ void function OnCloseServerBrowserMenu()
 
 void function OnServerBrowserMenuOpened()
 {
-	Hud_SetText( Hud_GetChild( file.menu, "InGamePlayerLabel" ), Localize("#INGAME_PLAYERS", "0") )
-	Hud_SetText( Hud_GetChild( file.menu, "TotalServerLabel" ),  Localize("#TOTAL_SERVERS", "0") )
 	UpdatePrivateMatchModesAndMaps()
 	Hud_SetText( Hud_GetChild( file.menu, "Title" ), "#MENU_TITLE_SERVER_BROWSER" )
 	UI_SetPresentationType( ePresentationType.KNOWLEDGEBASE_MAIN )
@@ -435,29 +419,36 @@ bool function IsFilterPanelElementFocused() {
 	var focusedElement = GetFocus();
 	var name = Hud_GetHudName(focusedElement);
 
-	foreach (element in GetElementsByClassname( file.menu, "FilterPanelChild")) {
-		if ( element == focusedElement ) return true
-	}
+	print(name)
+
+	// kinda sucks but just check if any of the filter elements
+	// has focus. would be nice to have tags or sth here
+	bool match = (name == "FilterPanel") ||
+				 (name == "BtnSearchLabel") ||
+				 (name == "BtnServerSearch") ||
+				 (name == "SwtBtnSelectMap") ||
+				 (name == "SwtBtnSelectGamemode") ||
+				 (name == "SwtBtnHideFull") ||
+				 (name == "SwtBtnHideEmpty") ||
+				 (name == "SwtBtnHideProtected") ||
+				 (name == "BtnFiltersClear") ||
+				 (name == "BtnDummyAfterFilterClear");
 
 
-	return false;
+	return match;
 }
 
 void function OnKeyTabPressed(var button) {
-	try
-	{
-		// toggle focus between server list and filter panel
-		if (IsFilterPanelElementFocused()) {
-			// print("Switching focus from filter panel to server list")
-			Hud_SetFocused(Hud_GetChild(file.menu, "BtnServer1"))
-		}
-		else {
-			// print("Switching focus from server list to filter panel")
-			Hud_SetFocused(Hud_GetChild(file.menu, "BtnServerSearch"))
-			HideServerInfo()
-		}
+	// toggle focus between server list and filter panel
+	if (IsFilterPanelElementFocused()) {
+		// print("Switching focus from filter panel to server list")
+		Hud_SetFocused(Hud_GetChild(file.menu, "BtnServer1"))
 	}
-	catch ( ex ) {}
+	else {
+		// print("Switching focus from server list to filter panel")
+		Hud_SetFocused(Hud_GetChild(file.menu, "BtnServerSearch"))
+		HideServerInfo()
+	}
 }
 
 void function OnHitDummyTop(var button) {
@@ -492,7 +483,7 @@ void function OnHitDummyBottom(var button) {
 }
 
 void function OnHitDummyAfterFilterClear(var button) {
-	Hud_SetFocused(Hud_GetChild(file.menu, "BtnServerNameTab"))
+	Hud_SetFocused(Hud_GetChild(file.menu, "BtnServer1"))
 }
 
 
@@ -579,31 +570,30 @@ void function FilterAndUpdateList( var n )
 
 	FilterServerList()
 
-
 	switch ( filterDirection.sortingBy )
 	{
-		case sortingBy.NONE:
+		case 0:
 			UpdateShownPage()
 			break
-		case sortingBy.NAME:
+		case 1:
 			filterDirection.serverName = !filterDirection.serverName
-			SortServerListByName_Activate(0)
+			SortServerListByName(0)
 			break
-		case sortingBy.PLAYERS:
+		case 2:
 			filterDirection.serverPlayers = !filterDirection.serverPlayers
-			SortServerListByPlayers_Activate(0)
+			SortServerListByPlayers(0)
 			break
-		case sortingBy.MAP:
+		case 3:
 			filterDirection.serverMap = !filterDirection.serverMap
-			SortServerListByMap_Activate(0)
+			SortServerListByMap(0)
 			break
-		case sortingBy.GAMEMODE:
+		case 5:	// 4 skipped cause it doesn't work respawn pls fix
 			filterDirection.serverGamemode = !filterDirection.serverGamemode
-			SortServerListByGamemode_Activate(0)
+			SortServerListByGamemode(0)
 			break
-		case sortingBy.LATENCY:
+		case 6:
 			filterDirection.serverLatency = !filterDirection.serverLatency
-			SortServerListByLatency_Activate(0)
+			SortServerListByLatency(0)
 			break
 		default:
 			printt( "How the f did you get here" )
@@ -665,7 +655,6 @@ void function WaitForServerListRequest()
 	else
 	{
 		FilterAndUpdateList(0)
-		Hud_SetFocused(Hud_GetChild(file.menu, "BtnServer1"))
 	}
 }
 
@@ -695,8 +684,7 @@ void function FilterServerList()
 		{
 			if ( filterArguments.useSearch )
 			{
-				string sName = tempServer.serverName.tolower() + " " + Localize(GetMapDisplayName(tempServer.serverMap)).tolower() + " " + tempServer.serverMap.tolower() + " " + tempServer.serverGamemode.tolower() + " " + Localize(tempServer.serverGamemode).tolower()
-
+				string sName = tempServer.serverName.tolower()
 				string sTerm = filterArguments.searchTerm.tolower()
 
 				if ( sName.find(sTerm) != null)
@@ -723,9 +711,10 @@ void function FilterServerList()
 				}
 			}
 		}
-		Hud_SetText( Hud_GetChild( file.menu, "InGamePlayerLabel" ), Localize("#INGAME_PLAYERS", string(totalPlayers)) )
-		Hud_SetText( Hud_GetChild( file.menu, "TotalServerLabel" ),  Localize("#TOTAL_SERVERS", string( NSGetServerCount()) ) )
 	}
+
+	Hud_SetText( Hud_GetChild( file.menu, "InGamePlayerCount" ), string( totalPlayers ) )
+	Hud_SetText( Hud_GetChild( file.menu, "TotalServerCount" ), string( NSGetServerCount() ) )
 }
 
 void function CheckGamemode( serverStruct t )
@@ -785,13 +774,8 @@ void function UpdateShownPage()
 
 void function OnServerButtonFocused( var button )
 {
-	if (file.scrollOffset < 0)
-		file.scrollOffset = 0
-	
 	int scriptID = int (Hud_GetScriptID(button))
 	file.serverButtonFocusedID = scriptID
-	if ( file.serversArrayFiltered.len() > 0 )
-		file.focusedServerIndex = file.serversArrayFiltered[ file.scrollOffset + scriptID ].serverIndex
 	DisplayFocusedServerInfo(scriptID);
 
 }
@@ -809,6 +793,7 @@ void function CheckDoubleClick(int scriptID, bool wasClickNav)
 	if ( NSGetServerCount() == 0 ) return
 
 
+	file.focusedServerIndex = file.serversArrayFiltered[ file.scrollOffset + scriptID ].serverIndex
 	int serverIndex = file.scrollOffset + scriptID
 
 	bool sameServer = false
@@ -833,7 +818,7 @@ void function DisplayFocusedServerInfo( int scriptID)
 {
 	if (scriptID == 999 || scriptID == -1 || scriptID == 16) return
 
-	if ( NSIsRequestingServerList() || NSGetServerCount() == 0 || file.serverListRequestFailed || file.serversArrayFiltered.len() == 0)
+	if ( NSIsRequestingServerList() || NSGetServerCount() == 0 || file.serverListRequestFailed )
 		return
 
 	var menu = GetMenu( "ServerBrowserMenu" )
@@ -848,7 +833,9 @@ void function DisplayFocusedServerInfo( int scriptID)
 	// text panels
 	Hud_SetVisible( Hud_GetChild( menu, "LabelDescription" ), true )
 	Hud_SetVisible( Hud_GetChild( menu, "LabelMods" ), false )
+	//RuiSetGameTime( textRui, "startTime", -99999.99 ) // make sure it skips the whole animation for showing this
 	Hud_SetText( Hud_GetChild( menu, "LabelDescription" ), NSGetServerDescription( file.serversArrayFiltered[ serverIndex ].serverIndex ) + "\n\nRequired Mods:\n" + FillInServerModsLabel( file.serversArrayFiltered[ serverIndex ].serverIndex ))
+	//Hud_SetText( Hud_GetChild( menu, "LabelMods" ), FillInServerModsLabel( file.serversArrayFiltered[ serverIndex ].serverIndex ) )
 
 	// map name/image/server name
 	string map = file.serversArrayFiltered[ serverIndex ].serverMap
@@ -1033,105 +1020,130 @@ void function ThreadedAuthAndConnectToServer( string password = "" )
 //////////////////////////////////////
 // Shadow realm
 //////////////////////////////////////
-int function ServerSortLogic ( serverStruct a, serverStruct b)
+void function SortServerListByName( var button )
 {
-	var aTemp
-	var bTemp
+	filterDirection.sortingBy = 1
 
-	bool direction
+	int n = file.serversArrayFiltered.len() - 1
 
-	// We can hard code this cause adding entire columns isn't as easy
-	switch ( filterDirection.sortingBy ) {
-		case sortingBy.NAME:
-			aTemp = a.serverName.tolower()
-			bTemp = b.serverName.tolower()
-			direction = filterDirection.serverName
-			break;
-		case sortingBy.PLAYERS:
-			aTemp = a.serverPlayers
-			bTemp = b.serverPlayers
-			direction = filterDirection.serverPlayers
-			break;
-		case sortingBy.MAP:
-			aTemp = Localize(a.serverMap).tolower()
-			bTemp = Localize(b.serverMap).tolower()
-			direction = filterDirection.serverMap
-			break;
-		case sortingBy.GAMEMODE:
-			aTemp = Localize(a.serverGamemode).tolower()
-			bTemp = Localize(b.serverGamemode).tolower()
-			direction = filterDirection.serverGamemode
-			break;
-		case sortingBy.LATENCY:
-			aTemp = a.serverLatency
-			bTemp = b.serverLatency
-			direction = filterDirection.serverLatency
-			break;
-		default:
-			return 0
+	serverStruct tempServer
+
+	for ( int i = 0; i < n; i++)
+	{
+		for ( int j = 0; j < n - 1; j++)
+		{
+			if ( file.serversArrayFiltered[ j ].serverName < file.serversArrayFiltered[ j + 1 ].serverName && filterDirection.serverName || file.serversArrayFiltered[ j ].serverName > file.serversArrayFiltered[ j + 1 ].serverName && !filterDirection.serverName)
+			{
+				tempServer = file.serversArrayFiltered[ j ]
+				file.serversArrayFiltered[ j ] = file.serversArrayFiltered[ j + 1 ]
+				file.serversArrayFiltered[ j + 1 ] = tempServer
+			}
+		}
 	}
-
-	int invert = direction == true ? 1 : -1
-
-	if ( aTemp > bTemp )
-		return 1 * invert
-
-	if ( aTemp < bTemp )
-		return -1 * invert
-
-	return 0
-}
-
-void function SortServerListByName_Activate ( var button )
-{
-	filterDirection.sortingBy = sortingBy.NAME
-
-	file.serversArrayFiltered.sort( ServerSortLogic )
 
 	filterDirection.serverName = !filterDirection.serverName
 
 	UpdateShownPage()
 }
 
-
-void function SortServerListByPlayers_Activate( var button )
+void function SortServerListByPlayers( var button )
 {
-	filterDirection.sortingBy = sortingBy.PLAYERS
+	filterDirection.sortingBy = 2
 
-	file.serversArrayFiltered.sort( ServerSortLogic )
+	int n = file.serversArrayFiltered.len() - 1
+
+	serverStruct tempServer
+
+	for ( int i = 0; i < n; i++)
+	{
+		for ( int j = 0; j < n - 1; j++)
+		{
+			if ( file.serversArrayFiltered[ j ].serverPlayers < file.serversArrayFiltered[ j + 1 ].serverPlayers && filterDirection.serverPlayers || file.serversArrayFiltered[ j ].serverPlayers > file.serversArrayFiltered[ j + 1 ].serverPlayers && !filterDirection.serverPlayers)
+			{
+				tempServer = file.serversArrayFiltered[ j ]
+				file.serversArrayFiltered[ j ] = file.serversArrayFiltered[ j + 1 ]
+				file.serversArrayFiltered[ j + 1 ] = tempServer
+			}
+		}
+	}
 
 	filterDirection.serverPlayers = !filterDirection.serverPlayers
 
 	UpdateShownPage()
 }
 
-void function SortServerListByMap_Activate( var button )
+void function SortServerListByMap( var button )
 {
-	filterDirection.sortingBy = sortingBy.MAP
+	filterDirection.sortingBy = 3
 
-	file.serversArrayFiltered.sort( ServerSortLogic )
+	int n = file.serversArrayFiltered.len() - 1
+
+	serverStruct tempServer
+
+	for ( int i = 0; i < n; i++)
+	{
+		for ( int j = 0; j < n - 1; j++)
+		{
+			if ( Localize(file.serversArrayFiltered[ j ].serverMap) < Localize(file.serversArrayFiltered[ j + 1 ].serverMap) && filterDirection.serverMap || Localize(file.serversArrayFiltered[ j ].serverMap) > Localize(file.serversArrayFiltered[ j + 1 ].serverMap) && !filterDirection.serverMap)
+			{
+				tempServer = file.serversArrayFiltered[ j ]
+				file.serversArrayFiltered[ j ] = file.serversArrayFiltered[ j + 1 ]
+				file.serversArrayFiltered[ j + 1 ] = tempServer
+			}
+		}
+	}
 
 	filterDirection.serverMap = !filterDirection.serverMap
 
 	UpdateShownPage()
 }
 
-void function SortServerListByGamemode_Activate( var button )
+void function SortServerListByGamemode( var button )
 {
-	filterDirection.sortingBy = sortingBy.GAMEMODE
+	filterDirection.sortingBy = 5
 
-	file.serversArrayFiltered.sort( ServerSortLogic )
+	int n = file.serversArrayFiltered.len() - 1
+
+	serverStruct tempServer
+
+	for ( int i = 0; i < n; i++)
+	{
+		for ( int j = 0; j < n - 1; j++)
+		{
+			if ( Localize(file.serversArrayFiltered[ j ].serverGamemode) < Localize(file.serversArrayFiltered[ j + 1 ].serverGamemode) && filterDirection.serverGamemode || Localize(file.serversArrayFiltered[ j ].serverGamemode) > Localize(file.serversArrayFiltered[ j + 1 ].serverGamemode) && !filterDirection.serverGamemode)
+			{
+				tempServer = file.serversArrayFiltered[ j ]
+				file.serversArrayFiltered[ j ] = file.serversArrayFiltered[ j + 1 ]
+				file.serversArrayFiltered[ j + 1 ] = tempServer
+			}
+		}
+	}
 
 	filterDirection.serverGamemode = !filterDirection.serverGamemode
 
 	UpdateShownPage()
 }
 
-void function SortServerListByLatency_Activate( var button )
+void function SortServerListByLatency( var button )
 {
-	filterDirection.sortingBy = sortingBy.LATENCY
+	filterDirection.sortingBy = 5
 
-	file.serversArrayFiltered.sort( ServerSortLogic )
+	int n = file.serversArrayFiltered.len() - 1
+
+	serverStruct tempServer
+
+	for ( int i = 0; i < n; i++)
+	{
+		for ( int j = 0; j < n - 1; j++)
+		{
+			if ( file.serversArrayFiltered[ j ].serverLatency < file.serversArrayFiltered[ j + 1 ].serverLatency && filterDirection.serverLatency || file.serversArrayFiltered[ j ].serverLatency > file.serversArrayFiltered[ j + 1 ].serverLatency && !filterDirection.serverLatency)
+			{
+				tempServer = file.serversArrayFiltered[ j ]
+				file.serversArrayFiltered[ j ] = file.serversArrayFiltered[ j + 1 ]
+				file.serversArrayFiltered[ j + 1 ] = tempServer
+			}
+		}
+	}
 
 	filterDirection.serverLatency = !filterDirection.serverLatency
 

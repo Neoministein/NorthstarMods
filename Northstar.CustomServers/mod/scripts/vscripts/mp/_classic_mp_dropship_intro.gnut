@@ -112,12 +112,7 @@ void function OnPrematchStart()
 	}
 	
 	foreach ( entity player in GetPlayerArray() )
-	{
-		if ( !IsPrivateMatchSpectator( player ) )
-			thread SpawnPlayerIntoDropship( player )
-		else
-			RespawnPrivateMatchSpectator( player )
-	}
+		thread SpawnPlayerIntoDropship( player )
 	
 	thread EndIntroWhenFinished()
 }

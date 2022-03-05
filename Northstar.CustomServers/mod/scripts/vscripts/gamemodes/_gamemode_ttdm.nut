@@ -36,12 +36,7 @@ void function TTDMIntroStartThreaded()
 	ClassicMP_OnIntroStarted()
 
 	foreach ( entity player in GetPlayerArray() )
-	{
-		if ( !IsPrivateMatchSpectator( player ) )
-			TTDMIntroShowIntermissionCam( player )
-		else
-			RespawnPrivateMatchSpectator( player )
-	}
+		TTDMIntroShowIntermissionCam( player )
 
 	wait TTDMIntroLength
 
@@ -76,7 +71,7 @@ void function PlayerWatchesTTDMIntroIntermissionCam( entity player )
 
 void function AddTeamScoreForPlayerKilled( entity victim, entity attacker, var damageInfo )
 {
-	if ( victim == attacker || !victim.IsPlayer() || !attacker.IsPlayer() && GetGameState() == eGameState.Playing )
+	if ( victim == attacker || !victim.IsPlayer() || !attacker.IsPlayer() || GetGameState() != eGameState.Playing )
 		return
 
 	AddTeamScore( GetOtherTeam( victim.GetTeam() ), 1 )

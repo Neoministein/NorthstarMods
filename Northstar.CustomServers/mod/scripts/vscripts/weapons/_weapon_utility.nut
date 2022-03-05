@@ -2774,8 +2774,6 @@ void function PAS_CooldownReduction_OnKill( entity victim, entity attacker, var 
 	if ( GetCurrentPlaylistVarInt( "featured_mode_tactikill", 0 ) > 0 )
 	{
 		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
-		if ( !IsValid(weapon) )
-			return
 
 		switch ( GetWeaponInfoFileKeyField_Global( weapon.GetWeaponClassName(), "cooldown_type" ) )
 		{
@@ -2809,8 +2807,6 @@ void function PAS_CooldownReduction_OnKill( entity victim, entity attacker, var 
 			return
 
 		entity weapon = attacker.GetOffhandWeapon( OFFHAND_LEFT )
-		if ( !IsValid(weapon) )
-			return
 
 		switch ( GetWeaponInfoFileKeyField_Global( weapon.GetWeaponClassName(), "cooldown_type" ) )
 		{

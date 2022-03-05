@@ -77,33 +77,17 @@ void function OnPrematchStart()
 	}
 			
 	file.militiaBuddy = CreatePropDynamic( $"models/titans/buddy/titan_buddy.mdl" )
-	if ( HasSwitchedSides() )
-	{
-		file.militiaBuddy.SetOrigin( imcBuddySpawn.origin )
-		file.militiaBuddy.SetAngles( imcBuddySpawn.angles )
-	}
-	else
-	{
-		file.militiaBuddy.SetOrigin( militiaBuddySpawn.origin )
-		file.militiaBuddy.SetAngles( militiaBuddySpawn.angles )
-	}
+	file.militiaBuddy.SetOrigin( militiaBuddySpawn.origin )
+	file.militiaBuddy.SetAngles( militiaBuddySpawn.angles )
 	thread AnimateBuddy( file.militiaBuddy )
 	
 	file.imcBuddy = CreatePropDynamic( $"models/titans/buddy/titan_buddy.mdl" )
-	if ( HasSwitchedSides() )
-	{
-		file.imcBuddy.SetOrigin( militiaBuddySpawn.origin )
-		file.imcBuddy.SetAngles( militiaBuddySpawn.angles )
-	}
-	else
-	{
-		file.imcBuddy.SetOrigin( imcBuddySpawn.origin )
-		file.imcBuddy.SetAngles( imcBuddySpawn.angles )
-	}
+	file.imcBuddy.SetOrigin( imcBuddySpawn.origin )
+	file.imcBuddy.SetAngles( imcBuddySpawn.angles )
 	thread AnimateBuddy( file.imcBuddy )
 	
 	foreach ( entity player in GetPlayerArray() )
-		AddPlayerToFastballIntro( player )
+		thread FastballPlayer( player )
 }
 
 void function AnimateBuddy( entity buddy )
@@ -135,12 +119,7 @@ void function AnimateBuddy( entity buddy )
 void function AddPlayerToFastballIntro( entity player )
 {	
 	if ( GetGameState() == eGameState.Prematch )
-	{
-		if ( !IsPrivateMatchSpectator( player ) )
-			thread FastballPlayer( player )
-		else
-			RespawnPrivateMatchSpectator( player )
-	}
+		thread FastballPlayer( player )
 }
 
 void function FastballPlayer( entity player )

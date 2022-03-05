@@ -2,8 +2,6 @@ untyped
 global function CodeCallback_MapInit
 
 struct {
-	array<entity> marvinSpawners
-
 	float introStartTime
 	entity militiaPod
 	entity imcPod
@@ -14,32 +12,26 @@ struct {
 
 void function CodeCallback_MapInit()
 {
-	AddCallback_EntitiesDidLoad( AddEvacNodes )
-	
-	// dissolve effects
-	AddDeathCallback( "player", WargamesDissolveDeadEntity )	
-	AddDeathCallback( "npc_soldier", WargamesDissolveDeadEntity )
-	AddDeathCallback( "npc_spectre", WargamesDissolveDeadEntity )
-	AddDeathCallback( "npc_pilot_elite", WargamesDissolveDeadEntity )
-	AddDeathCallback( "npc_marvin", WargamesDissolveDeadEntity )
-	
-	AddSpawnCallback( "info_spawnpoint_marvin", AddMarvinSpawner )
-	AddCallback_GameStateEnter( eGameState.Prematch, SpawnMarvinsForRound )
-	
-	// currently disabled until finished: intro
-	if ( !IsFFAGame() )
-		ClassicMP_SetLevelIntro( WargamesIntroSetup, 20.0 )
-}
-
-void function AddEvacNodes()
-{
 	AddEvacNode( GetEnt( "evac_location1" ) )
 	AddEvacNode( GetEnt( "evac_location2" ) )
 	AddEvacNode( GetEnt( "evac_location3" ) )
 	AddEvacNode( GetEnt( "evac_location4" ) )
 	
 	SetEvacSpaceNode( GetEnt( "end_spacenode" ) )
-}	
+	
+	// dissolve effects
+	AddDeathCallback( "player", WargamesDissolveDeadEntity )
+	AddDeathCallback( "npc_soldier", WargamesDissolveDeadEntity )
+	AddDeathCallback( "npc_spectre", WargamesDissolveDeadEntity )
+	AddDeathCallback( "npc_pilot_elite", WargamesDissolveDeadEntity )
+	AddDeathCallback( "npc_marvin", WargamesDissolveDeadEntity )
+	
+	FlagClear( "Disable_Marvins" )
+	
+	// currently disabled until finished: intro
+	if ( !IsFFAGame() )
+		ClassicMP_SetLevelIntro( WargamesIntroSetup, 20.0 )
+}
 
 // dissolve effects
 void function WargamesDissolveDeadEntity( entity deadEnt, var damageInfo )
@@ -48,45 +40,6 @@ void function WargamesDissolveDeadEntity( entity deadEnt, var damageInfo )
 	{
 		deadEnt.Dissolve( ENTITY_DISSOLVE_CHAR, < 0, 0, 0 >, 0 )
 		EmitSoundAtPosition( TEAM_UNASSIGNED, deadEnt.GetOrigin(), "Object_Dissolve" )
-		
-		if ( deadEnt.IsPlayer() )
-			thread EnsureWargamesDeathEffectIsClearedForPlayer( deadEnt )
-	}
-}
-
-void function EnsureWargamesDeathEffectIsClearedForPlayer( entity player )
-{
-	// this is slightly shit but whatever lol
-	player.EndSignal( "OnDestroy" )
-	
-	float startTime = Time()
-	while ( player.kv.VisibilityFlags != "0" )
-	{
-		if ( Time() > startTime + 4.0 ) // if we wait too long, just ignore
-			return
-	
-		WaitFrame() 
-	}
-	
-	player.kv.VisibilityFlags = ENTITY_VISIBLE_TO_EVERYONE
-}
-
-void function AddMarvinSpawner( entity spawn )
-{
-	file.marvinSpawners.append( spawn )
-}
-
-void function SpawnMarvinsForRound()
-{
-	foreach ( entity spawner in file.marvinSpawners )
-	{
-		entity marvin = CreateMarvin( TEAM_UNASSIGNED, spawner.GetOrigin(), spawner.GetAngles() )
-		marvin.kv.health = 1
-		marvin.kv.max_health = 1
-		marvin.kv.spawnflags = 516
-		marvin.kv.contents = (int(marvin.kv.contents) | CONTENTS_NOGRAPPLE)
-		DispatchSpawn( marvin )
-		HideName( marvin )
 	}
 }
 
@@ -182,12 +135,7 @@ void function OnPrematchStart()
 	
 	// launch players into intro
 	foreach ( entity player in GetPlayerArray() )
-	{
-		if ( !IsPrivateMatchSpectator( player ) )
-			thread PlayerWatchesWargamesIntro( player )
-		else
-			RespawnPrivateMatchSpectator( player )
-	}
+		thread PlayerWatchesWargamesIntro( player )
 	
 	// 7 seconds of nothing until we start the pod sequence
 	wait 7.0

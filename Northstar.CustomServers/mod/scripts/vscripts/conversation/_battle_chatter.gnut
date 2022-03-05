@@ -4,16 +4,14 @@ global function TryPlayWeaponBattleChatterLine
 
 void function BattleChatter_Init()
 {
-	AddCallback_OnPlayerGetsNewPilotLoadout( UpdatePlayerVoiceIndex )
+	//ShBattleChatter_Init()
 }
 
 void function PlayBattleChatterLine( entity player, string conversationType )
 {
-	int conversationIndex = GetConversationIndex( conversationType )
-
-	foreach( entity otherPlayer in GetPlayerArrayOfTeam( player.GetTeam() ) )
+	foreach( entity otherPlayer in GetPlayerArray() )
 		if ( ShouldPlayBattleChatter( conversationType, otherPlayer, player ) && player != otherPlayer )
-			Remote_CallFunction_Replay( otherPlayer, "ServerCallback_PlayBattleChatter", conversationIndex, player.GetEncodedEHandle() )
+			Remote_CallFunction_NonReplay( otherPlayer, "ServerCallback_PlayBattleChatter", GetConversationIndex( conversationType ), player.GetEncodedEHandle() )
 }
 
 void function TryPlayWeaponBattleChatterLine( entity player, entity weapon )
@@ -24,22 +22,4 @@ void function TryPlayWeaponBattleChatterLine( entity player, entity weapon )
 		
 	expect string( chatterEvent )
 	PlayBattleChatterLine( player, chatterEvent )
-}
-
-void function UpdatePlayerVoiceIndex( entity player, PilotLoadoutDef voiceIndex )
-{
-	if ( IsPlayerFemale( player ) )
-	{
-		if ( player.IsMechanical() )
-			player.SetPlayerNetInt( "battleChatterVoiceIndex", SelectRandomAndroidFemaleBattleChatterVoice() )
-		else
-			player.SetPlayerNetInt( "battleChatterVoiceIndex", SelectRandomFemaleBattleChatterVoice() )
-	}
-	else
-	{
-		if ( player.IsMechanical() )
-			player.SetPlayerNetInt( "battleChatterVoiceIndex", SelectRandomAndroidMaleBattleChatterVoice() )
-		else
-			player.SetPlayerNetInt( "battleChatterVoiceIndex", SelectRandomMaleBattleChatterVoice() )
-	}
 }

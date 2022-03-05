@@ -23,7 +23,6 @@ void function GamemodeSpeedball_Init()
 	
 	AddCallback_GameStateEnter( eGameState.Prematch, CreateFlagIfNoFlagSpawnpoint )
 	AddCallback_GameStateEnter( eGameState.Playing, ResetFlag )
-	AddCallback_GameStateEnter( eGameState.WinnerDetermined,GamemodeSpeedball_OnWinnerDetermined)
 	AddCallback_OnTouchHealthKit( "item_flag", OnFlagCollected )
 	AddCallback_OnPlayerKilled( OnPlayerKilled )
 	SetTimeoutWinnerDecisionFunc( TimeoutCheckFlagHolder )
@@ -44,11 +43,7 @@ void function CreateFlag( entity flagSpawn )
 	flag.SetModel( CTF_FLAG_MODEL )
 	flag.SetOrigin( flagBase.GetOrigin() + < 0, 0, flagBase.GetBoundingMaxs().z + 1 > )
 	flag.SetVelocity( < 0, 0, 1 > )
-
-	flag.Minimap_AlwaysShow( TEAM_IMC, null )
-	flag.Minimap_AlwaysShow( TEAM_MILITIA, null )
-	flag.Minimap_SetAlignUpright( true )
-
+	
 	file.flag = flag
 	file.flagBase = flagBase
 }	
@@ -77,7 +72,6 @@ void function GiveFlag( entity player )
 {
 	file.flag.SetParent( player, "FLAG" )
 	file.flagCarrier = player
-	SetTeam( file.flag, player.GetTeam() )
 	SetGlobalNetEnt( "flagCarrier", player )
 	thread DropFlagIfPhased( player )
 	
@@ -110,7 +104,6 @@ void function DropFlag()
 {
 	file.flag.ClearParent()
 	file.flag.SetAngles( < 0, 0, 0 > )
-	SetTeam( file.flag, TEAM_UNASSIGNED )
 	SetGlobalNetEnt( "flagCarrier", file.flag )
 	
 	if ( IsValid( file.flagCarrier ) )
@@ -129,7 +122,7 @@ void function CreateFlagIfNoFlagSpawnpoint()
 	
 	foreach ( entity hardpoint in GetEntArrayByClass_Expensive( "info_hardpoint" ) )
 	{
-		if ( GetHardpointGroup(hardpoint) == "B" )
+		if ( hardpoint.kv.hardpointGroup == "B" )
 		{
 			CreateFlag( hardpoint )
 			return
@@ -143,7 +136,6 @@ void function ResetFlag()
 	file.flag.SetAngles( < 0, 0, 0 > )
 	file.flag.SetVelocity( < 0, 0, 1 > ) // hack: for some reason flag won't have gravity if i don't do this
 	file.flag.SetOrigin( file.flagBase.GetOrigin() + < 0, 0, file.flagBase.GetBoundingMaxs().z * 2 > )
-	SetTeam( file.flag, TEAM_UNASSIGNED )
 	file.flagCarrier = null
 	SetGlobalNetEnt( "flagCarrier", file.flag )
 }
@@ -154,18 +146,4 @@ int function TimeoutCheckFlagHolder()
 		return TEAM_UNASSIGNED
 		
 	return file.flagCarrier.GetTeam()
-}
-
-void function GamemodeSpeedball_OnWinnerDetermined()
-{
-	if(IsValid(file.flagCarrier))
-		file.flagCarrier.AddToPlayerGameStat( PGS_ASSAULT_SCORE, 1 )
-}
-
-string function GetHardpointGroup(entity hardpoint) //Hardpoint Entity B on Homestead is missing the Hardpoint Group KeyValue
-{
-	if((GetMapName()=="mp_homestead")&&(!hardpoint.HasKey("hardpointGroup")))
-		return "B"
-
-	return string(hardpoint.kv.hardpointGroup)
 }
