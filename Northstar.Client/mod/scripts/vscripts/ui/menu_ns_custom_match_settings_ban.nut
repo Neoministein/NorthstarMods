@@ -84,7 +84,7 @@ void function OpenBanMenu()
 
 void function InitNorthstarCustomMatchSettingsBanMenu()
 {
-  AddCustomCategory("#BAN_PAGE" , "CustomMatchBanSettingsMenu")
+  AddCustomPrivateMatchSettingsCategory("#BAN_PAGE" , "CustomMatchBanSettingsMenu")
   
   file.menu = GetMenu( "CustomMatchBanSettingsMenu" )
   AddMenuEventHandler( file.menu, eUIEvent.MENU_OPEN, OnMenu_Open )
@@ -378,15 +378,7 @@ void function callChangeMainDisplay( var pressedButton )
 
 void function reloadCurrentScreen() 
 {
-  if (file.selected == 0) {
-    ClientCommand( "BanUiRequestUpdate " + 0)
-  } else if(file.selected == 1) {
-    ClientCommand( "BanUiRequestUpdate " + ( 1 + file.weapon.categorySelected ) )
-  } else if (file.selected == 2) {
-    ClientCommand( "BanUiRequestUpdate " + ( 9 + file.titan.categorySelected ) )
-  } else if (file.selected == 3) {
-    ClientCommand( "BanUiRequestUpdate " + 12 )
-  }
+  UpdateBanUI()
   reloadActiveUI()
 }
 
@@ -468,7 +460,7 @@ void function changeWeaponDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.weapon.categorySelected) {
-    ClientCommand( "BanUiRequestUpdate " + ( 1 + selected) )
+    UpdateBanUI()
     selectButton(file.weapon.buttons, file.weapon.categorySelected, selected)
     loadWeaponCategory(file.weapon.categories[selected])
     
@@ -523,7 +515,7 @@ void function changeTitanDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.titan.categorySelected) {
-    ClientCommand( "BanUiRequestUpdate " + ( 9 + selected) )
+    UpdateBanUI()
     selectButton(file.titan.buttons, file.titan.categorySelected, selected)
     loadTitanCategory(file.titan.categories[selected])
     
@@ -785,28 +777,32 @@ void function importConfigToString(var pressedButton)
   if(importString.len() != 177) {
     return
   }
+  importUIConfig(importString)
+  sendPilotConfig()
+  sendWeaponConfig()
+  sendTitanConfig()
+  sendBoostConfig()
+}
 
-  array<int> importArray = parseImportData(importString)
+void function importUIConfig(string input) 
+{
+  if(input.len() != 177) {
+    return
+  }
+
+  array<int> importArray = parseImportData(input)
   int count = 0
 
   if(importArray.len() != 177) {
     return
   }
 
-  
-
   count = importPilotUIConfig(importArray, count)
   count = importWeaponUIConfig(importArray, count)
   count = importTitanUIConfig(importArray, count)
   count = importBoostUIConfig(importArray, count)
 
-
-  sendPilotConfig()
-  sendWeaponConfig()
-  sendTitanConfig()
-  sendBoostConfig()
-
-  reloadCurrentScreen() 
+  reloadActiveUI() 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1752,54 +1748,14 @@ void function initBoost()
 ///Networking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void function UpdateBanUI( int uiToUpdate , int dataSet0, int dataSet1, int dataSet2) 
+void function UpdateBanUI() 
 {
-  print("Recive update reponse")
+	string data = ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_0", "") + ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_1", "") + ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_2", "") + ""
 
-  print(dataSet0 + " " + dataSet1 + " " + dataSet2)
-  switch(uiToUpdate) 
-	{
-		case 0: //PILOT UI
-      importPilotUIConfig(parseImportData( dataSet0 + "" + dataSet1))
-			break
-		case 1: //Assult rifle
-      importWeaponCategoryUIConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 2: //SMG
-      importWeaponCategoryUIConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 3: // LMG
-      importWeaponCategoryUIConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 4: // SNIPER
-      importWeaponCategoryUIConfig(3, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 5: // SHOTGUN
-      importWeaponCategoryUIConfig(4, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 6: // GRENADIER
-      importWeaponCategoryUIConfig(5, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 7: // PISTOL
-      importWeaponCategoryUIConfig(6, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 8: // ANTI-TITAN
-      importWeaponCategoryUIConfig(7, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 9: // STRYDER
-      importTitanCategoryUIConfig(0, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 10: //ATLAS
-      importTitanCategoryUIConfig(1, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 11: //OGRE
-      importTitanCategoryUIConfig(2, parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			break
-		case 12: //BOOST
-      importBoostUIConfig(parseImportData( dataSet0 + "" + dataSet1 + "" + dataSet2))
-			//Is split into two due to max int being 10 characters
-			break
-	}
+  importUIConfig(data)
 
   reloadActiveUI()
 }

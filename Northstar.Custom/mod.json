@@ -385,14 +385,6 @@
 			"ServerCallback": {
 				"After": "CustomPilotCollision_InitPlaylistVars"
 			}
-		},
-		{
-			"Path": "client/cl_banCodeback.gnut",
-			"RunOn": "CLIENT",
-			"ClientCallback": {
-				"Before": "ClBanCodeback_Init"
-			}
-
 		}
 	],
 	

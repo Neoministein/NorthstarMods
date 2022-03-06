@@ -74,17 +74,9 @@ void function TitanEarning_TitanEarned( entity player )
 void function BanLogicInGame(entity player)
 {
 	if ( player.IsTitan() ||  GameRules_GetGameMode() == LAST_TITAN_STANDING ||  GameRules_GetGameMode() == TITAN_BRAWL )
-		{
-			return
-		}
-		else if(GetGameState() == eGameState.Prematch)
-		{
-			// I think this could solve a bug where the game crashes when you use the mod for the first time running  
-			SetActiveTitanLoadout(player)
-		
-			return
-		}
-
+	{
+		return
+	}
 	bool shouldChangeLoadout = false
 	// create loadout struct
 	PilotLoadoutDef modifiedLoadout = clone GetActivePilotLoadout( player )

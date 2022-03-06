@@ -1,6 +1,17 @@
 untyped
 
-globalize_all_functions
+global function BanEquipment_Init
+
+global function getWeaponBanData
+global function getTitanBanData
+global function getAbilityBanData
+global function getGrenadeBanData
+global function getBoostBanData
+
+global function createUniversalBanStruct
+global function createWeaponBanStruct
+global function createTitanBanStruct
+global function createBoostBanStruct
 
 global struct WeaponBanStruct {
 	string name,
@@ -46,9 +57,83 @@ struct {
 void function BanEquipment_Init()
 {
 	InitData()
-	//TODO GET DATA FROM PERSISTENT
+	ImportData()
+
 	AddClientCommandCallback( "BanUiUpdateData", ClientCommandCallback_BanUiUpdateData )
-	AddClientCommandCallback( "BanUiRequestUpdate", ClientCommandCallback_BanUiRequestUpdate )
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///IMPORT DATA
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void function ImportData()
+{
+	string data = ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_0", "") + ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_1", "") + ""
+	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_2", "") + ""
+
+	print(data)
+
+	array< string > importArray = parseImportData( data )
+
+	if(importArray.len() != 177) {
+		print("return")
+    	return
+  	}
+
+	int currentIndex = 0
+	for( int i = 0; i < file.abilityArray.len() + file.grenadeArray.len(); i++ ) 
+	{
+		UpdateAbility( i, importArray[currentIndex++] )
+	}
+
+	for( int i = 0; i < file.weaponArray.len(); i++ ) 
+	{
+		string updateData = ""
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+
+		UpdateWeapon( i, updateData )
+	}
+
+	for( int i = 0; i < file.titanArray.len(); i++ ) 
+	{
+		string updateData = ""
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+		updateData += importArray[currentIndex++]
+
+		UpdateTitan( i, updateData )
+	}
+
+	for( int i = 0; i < file.boostArray.len(); i++ ) 
+	{
+		UpdateBoost( i, importArray[currentIndex++] )
+	}
+
+	string dataToStore = ""
+	foreach (UniversalBanStruct banStruct in file.abilityArray ) 
+	{
+		dataToStore += banStruct.disabled ? "1" : "0"
+	}
+	foreach (UniversalBanStruct banStruct in file.grenadeArray ) 
+	{
+		dataToStore += banStruct.disabled ? "1" : "0"
+	}
+	for(int i = 0; i < file.weaponArray.len(); i++) 
+	{
+		dataToStore += GetWeaponStringaData(i)
+	}
+	for(int i = 0; i < file.titanArray.len(); i++) 
+	{
+		dataToStore += GetTitanStringaData(i)
+	}
+	foreach(BoostBanStruct boostStruct in file.boostArray) {
+		dataToStore += boostStruct.disabled ? "1" : "0"
+	}
+	print(dataToStore)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +151,7 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 	print("Recive data")
 	if(args.len() == 0) 
 	{
-		return false
+		return true
 	}
 	
 
@@ -99,6 +184,31 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 
 		}
 	}
+
+	string dataToStore = ""
+	foreach (UniversalBanStruct banStruct in file.abilityArray ) 
+	{
+		dataToStore += banStruct.disabled ? "1" : "0"
+	}
+	foreach (UniversalBanStruct banStruct in file.grenadeArray ) 
+	{
+		dataToStore += banStruct.disabled ? "1" : "0"
+	}
+	for(int i = 0; i < file.weaponArray.len(); i++) 
+	{
+		dataToStore += GetWeaponStringaData(i)
+	}
+	for(int i = 0; i < file.titanArray.len(); i++) 
+	{
+		dataToStore += GetTitanStringaData(i)
+	}
+	foreach(BoostBanStruct boostStruct in file.boostArray) {
+		dataToStore += boostStruct.disabled ? "1" : "0"
+	}
+
+	SetPlaylistVarOverride("BAN_DATA_0", dataToStore.slice(0,60))
+	SetPlaylistVarOverride("BAN_DATA_1", dataToStore.slice(60,120))
+	SetPlaylistVarOverride("BAN_DATA_2", dataToStore.slice(120))
 
 	return true
 }
@@ -450,104 +560,8 @@ string function GetMonarchCoreStringFromId(string str, int coreStage)
 	return "UNDEFINED"
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///ClientCommandCallback_BanUiRequestUpdate
+///Serialize data
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool function ClientCommandCallback_BanUiRequestUpdate( entity player, array<string> args ) 
-{
-	if(0 == args.len()) {
-		return false;
-	}
-	int uiToUpdate = int(args[0])
-	print("BAN UI to update: " + uiToUpdate)
-
-	switch(uiToUpdate) 
-	{
-		case 0: //PILOT UI
-			string pilotAbilities = "9"
-			foreach (UniversalBanStruct banStruct in file.abilityArray ) 
-			{
-				pilotAbilities += banStruct.disabled ? "1" : "0"
-			}
-			string ordinances = "9"
-			foreach (UniversalBanStruct banStruct in file.grenadeArray ) 
-			{
-				ordinances += banStruct.disabled ? "1" : "0"
-			}
-			print(uiToUpdate + " " + pilotAbilities + " " + ordinances)
-			Remote_CallChannel(player, 11669790, uiToUpdate, int(pilotAbilities), int(ordinances))
-			break
-		case 1: //Assult rifle
-			array<int> weaponData = GetBundeledWeaponData (0, 1, 2, 3, 4)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 2: //SMG
-			array<int> weaponData = GetBundeledWeaponData (5, 6, 7, 8)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 3: // LMG
-			array<int> weaponData = GetBundeledWeaponData (9, 10, 11)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 4: // SNIPER
-			array<int> weaponData = GetBundeledWeaponData (12, 13, 14)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 5: // SHOTGUN
-			array<int> weaponData = GetBundeledWeaponData (15, 16)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 6: // GRENADIER
-			array<int> weaponData = GetBundeledWeaponData (17, 18, 19, 20)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 7: // PISTOL
-			array<int> weaponData = GetBundeledWeaponData (21, 22, 23, 24, 25)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 8: // ANTI-TITAN
-			array<int> weaponData = GetBundeledWeaponData (26, 27 ,28, 29)
-			Remote_CallChannel(player, 11669790, uiToUpdate, weaponData[0], weaponData[1], weaponData[2])
-			break
-		case 9: // STRYDER
-			array<int> titanData = GetBundeledTitanData (0, 1)
-			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
-			break
-		case 10: //ATLAS
-			array<int> titanData = GetBundeledTitanData (2, 3, 4, 5)
-			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
-			break
-		case 11: //OGRE
-			array<int> titanData = GetBundeledTitanData (6, 7)
-			Remote_CallChannel(player, 11669790, uiToUpdate, titanData[0], titanData[1], titanData[2])
-			break
-		case 12: //BOOST
-			//Is split into two due to max int being 10 characters
-			string firstHalfBoosts = "9"
-			for(int i = 0; i < file.boostArray.len()/2; i++) {
-				firstHalfBoosts += file.boostArray[i].disabled ? "1" : "0"
-			}
-			string secondHalfBoosts = "9"
-			for(int i = file.boostArray.len()/2; i < file.boostArray.len(); i++) {
-				secondHalfBoosts += file.boostArray[i].disabled ? "1" : "0"
-			}
-			Remote_CallChannel(player, 11669790, uiToUpdate, int(firstHalfBoosts), int(secondHalfBoosts))
-			break
-
-	}
-	//int displayToUpdate = int(args.len())
-
-	return true
-}
-
-array<int> function GetBundeledWeaponData(int idOne = -1, int idTwo = -1, int idThree = -1, int idFour = -1, int idFive = -1) 
-{
-	array<int> weaponData = []
-	weaponData.append(int("9" + GetWeaponStringaData(idOne) + GetWeaponStringaData(idTwo))) 
-	weaponData.append(int("9" + GetWeaponStringaData(idThree) + GetWeaponStringaData(idFour)))
-	weaponData.append(int("9" + GetWeaponStringaData(idFive) + GetWeaponStringaData(-1)))
-
-	return weaponData
-}
 
 string function GetWeaponStringaData(int id) 
 {
@@ -610,17 +624,6 @@ string function GetWeaponVisorIdFromString(string str)
 	}
 	return "0"
 }
-
-array<int> function GetBundeledTitanData(int idOne = -1, int idTwo = -1, int idThree = -1, int idFour = -1, int idFive = -1) 
-{
-	array<int> weaponData = []
-	weaponData.append(int("9" + GetTitanStringaData(idOne) + GetTitanStringaData(idTwo))) 
-	weaponData.append(int("9" + GetTitanStringaData(idThree) + GetTitanStringaData(idFour)))
-	weaponData.append(int("9" + GetTitanStringaData(idFive) + GetTitanStringaData(-1)))
-
-	return weaponData
-}
-
 
 string function GetTitanStringaData(int id) 
 {
@@ -844,6 +847,10 @@ string function GetMonarchCoreIdFromString(string str, int coreStage)
 	return "0"
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Get data
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 array<WeaponBanStruct> function getWeaponBanData() 
 {
 	return file.weaponArray
@@ -868,6 +875,10 @@ array<TitanBanStruct> function getTitanBanData()
 {
 	return file.titanArray
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Setup data
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void function InitData()
 {
@@ -998,17 +1009,6 @@ TitanBanStruct function createTitanBanStruct(string name, bool disabled = false)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Utility
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-int function arrayContains(array<string> a, string toCheck) 
-{
-  for(int i = 0; i < a.len(); i++) 
-  {
-    if (toCheck == a[i]) {
-      return i
-    }
-  }
-  return -1
-}
 
 array< string > function parseImportData(string importData) 
 {
