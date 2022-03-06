@@ -1,5 +1,6 @@
 untyped
 global function BanLogic_Init
+global function  CheckTitanForBanLogic
 
 
 void function BanLogic_Init()
@@ -12,19 +13,20 @@ void function BanLogic_Init()
 
 	AddCallback_OnUpdateDerivedPlayerTitanLoadout(CheckTitanForBanLogic)
 
-	// iron lts rules
-	if ( HasIronRules() ) 
-		Riff_ForceTitanExitEnabled( eTitanExitEnabled.Never )
-
-
-
+	// dont know if this is still necessary will look into it in ver 1.1 
 	foreach(entity player in GetPlayerArray())
 	{
-		GetTitanLoadoutForPlayer(player)
+		CheckTitanForBanLogic(player,GetTitanLoadoutForPlayer(player))
 	}
 
-	AddCallback_GameStateEnter( eGameState.Playing, TitanEarning_OnPlaying )
+	AddCallback_GameStateEnter( eGameState.Playing, OnGameStartePlay )
 
+}
+
+void function OnGameStartePlay()
+{
+	SetLoadoutGracePeriodEnabled( false )
+	TitanEarning_OnPlaying()
 }
 
 void function TitanEarning_OnPlaying()
@@ -69,7 +71,7 @@ void function TitanEarning_TitanEarned( entity player )
 }
 
 
-// TODO  stesstest, look into titant respawn banlogic  aka on lts / titanBrawl , maybe look into changing loadout when ejecting in lts (all the other mods ignore it)
+// TODO  stesstest, maybe look into changing loadout when ejecting in lts 
 
 void function BanLogicInGame(entity player)
 {
@@ -108,7 +110,6 @@ void function BanLogicInGame(entity player)
 		//check Primary
 		if(modifiedLoadout.primary == weapon.name && weapon.disabled)
 		{
-			printt("----------------------------------- changed prim")
 			EditedKit = true
 				
 			WeaponBanStruct newWeapon = GetFirstAvailablePrimaryWeapon()
@@ -120,14 +121,15 @@ void function BanLogicInGame(entity player)
 				modifiedLoadout.primaryAttachments = newWeapon.visor
 				
 				message += "primary changet to: " + newWeapon.name +" \n"
-				// if mod1 is forced && mod 2 is free and its the same as forced mod1 we ignore it, but you can do it if  you want  tf2 wont crash
-				if( newWeapon.mod1 != "UNDEFINED")
+
+				// if mod1 is forced && mod 2 is free and its the same as forced mod1 it crashes so making sure that this wont happen 
+				if( newWeapon.mod1 != "UNDEFINED" && modifiedLoadout.primaryMods[1]  != newWeapon.mod1)
 				{
 					modifiedLoadout.primaryMods[0] = newWeapon.mod1
 					modifiedLoadout.primaryAttachments = newWeapon.visor
 				}
 
-				if( newWeapon.mod2 != "UNDEFINED")
+				if( newWeapon.mod2 != "UNDEFINED" && modifiedLoadout.primaryMods[0]  != newWeapon.mod2)
 				{
 					modifiedLoadout.primaryMods[1] = newWeapon.mod2
 					modifiedLoadout.primaryAttachments = newWeapon.visor
@@ -138,9 +140,7 @@ void function BanLogicInGame(entity player)
 					modifiedLoadout.primaryAttachments = newWeapon.visor
 				}
 				else
-				{
-					// thanks tf 2 for hating me and not letting me decale the string array in line 150 
-					array<string> ironSight = [""] 
+				{ 
 					modifiedLoadout.primaryAttachments = [""]
 				}
 			}
@@ -154,7 +154,6 @@ void function BanLogicInGame(entity player)
 			//check Secondary Slot
 			else if(modifiedLoadout.secondary == weapon.name && weapon.disabled)
 			{
-				printt("----------------------------------- changed SEC ")
 				EditedKit = true
 
 
@@ -174,7 +173,6 @@ void function BanLogicInGame(entity player)
 					modifiedLoadout.secondary = newWeapon.name
 					message += "Secondary changet to: " + newWeapon.name +" \n"
 
-					// if mod1 is forced && mod 2 is free and its the same as forced mod1 we ignore it, but you can do it if  you want  tf2 wont crash
 					if( weapon.mod1 != "UNDEFINED")
 					{
 						modifiedLoadout.secondaryMods[0] = newWeapon.mod1
@@ -194,7 +192,6 @@ void function BanLogicInGame(entity player)
 				//check 3rd Slot
 			else if(modifiedLoadout.weapon3 == weapon.name && weapon.disabled)
 			{
-				printt("----------------------------------- changed weapon 3")
 				EditedKit = true
 				WeaponBanStruct  newWeapon
  				if ( GetWeaponInfoFileKeyField_Global( player.GetMainWeapons()[ 2 ].GetWeaponClassName(), "menu_category" ) == "at" )
@@ -254,7 +251,6 @@ void function BanLogicInGame(entity player)
 			{
 				if(grenade.disabled) 
 				{
-					printt("----------------------------------- changed Grenade")
 					EditedKit = true
 					UniversalBanStruct newUniversalBanStruct = GetFirstAvailableGrenade()
 				
@@ -459,18 +455,15 @@ TitanBanStruct function GetFirstAvailableTitan()
 void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLoadout)	
 {
 	
-		//print("----------------------------------------------------------- BEFORE CHANGE")
-		//PrintTitanLoadout(currentTitanLoadout)
 
 		int titanLoadoutIndex 
 		TitanBanStruct	titanStruct
-	
+		
+		// if titan is banned get an unbaned titan and get all the skins for it 
 		if(GetTitanStructByName(currentTitanLoadout.titanClass).disabled)
 		{
 
 	 		titanStruct  = GetFirstAvailableTitan()
-
-			 PrintTitanStruct(titanStruct)
 
 			
 			if(titanStruct.name == "Null")
@@ -478,12 +471,9 @@ void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLo
 				return
 			}
 
-			print("------------------------- Changed titan")
 
 			titanLoadoutIndex = GetTitanLoadoutIndexByName(titanStruct.name)
 			
-
-			//currentTitanLoadout =  GetTitanLoadoutFromPersistentDataWithoutCallback(player,titanLoadoutIndex)
 
 			
 			currentTitanLoadout.titanClass = titanStruct.name
@@ -508,33 +498,28 @@ void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLo
 			currentTitanLoadout.titanExecution 		= GetValidatedPersistentLoadoutValue( player, "titan", titanLoadoutIndex, "titanExecution" )
 			currentTitanLoadout.showArmBadge		= GetValidatedPersistentLoadoutValueInt( player, "titan", titanLoadoutIndex, "showArmBadge" )
 
-			// find out how prime Titans are handeled 
+			// I have to find out how prime Titans are handeled  this is  still in dev  so there are some skin index wierdness 
 			currentTitanLoadout.isPrime	= GetValidatedPersistentLoadoutValue( player, "titan", titanLoadoutIndex, "isPrime" )
 
 		} 
 		else
 		{
+			//if its not banned just look up the struct to make shure all passives are set right 
 			titanStruct = GetTitanStructByName(currentTitanLoadout.titanClass)
 		}
 	
 		if(titanStruct.passive1 != "UNDEFINED")
 		{
-			print("------------------------- Changed titan passive 1")
-			print("-------------------------------" + titanStruct.passive1)
 			currentTitanLoadout.passive1 =  titanStruct.passive1 
 		}
 	
 		if(titanStruct.passive2 != "UNDEFINED")
 		{
-			print("------------------------- Changed titan passive 2")
-			print("-------------------------------" + titanStruct.passive2)
 			currentTitanLoadout.passive2 =  titanStruct.passive2
 		}
 	
 		if(titanStruct.passive3 != "UNDEFINED")
 		{
-			print("------------------------- Changed titan passive 3")
-			print("-------------------------------" + titanStruct.passive3)
 			currentTitanLoadout.passive3 =  titanStruct.passive3
 		}
 
@@ -544,13 +529,11 @@ void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLo
 			
 			if(titanStruct.passive1 != "UNDEFINED")
 			{
-				print("------------------------- Changed titan passive 4")
 				currentTitanLoadout.passive4 =  titanStruct.passive1
 			}
 	
 			if(titanStruct.passive2 != "UNDEFINED")
 			{
-				print("------------------------- Changed titan passive 5")
 				
 				currentTitanLoadout.passive5 =  titanStruct.passive1
 			}
@@ -558,12 +541,11 @@ void function CheckTitanForBanLogic(entity player,TitanLoadoutDef currentTitanLo
 	
 			if(titanStruct.passive3 != "UNDEFINED")
 			{
-				print("------------------------- Changed titan passive 6")
 				currentTitanLoadout.passive6 =  titanStruct.passive1
 			}
 		}
 
-	// shitfix for the moments where these values are "null" should be ""
+	// shitfix for the moments where these values are "null" should be "" dont know if this is still necessary 
 	if(currentTitanLoadout.passive4 == "null")
 	{
 		currentTitanLoadout.primaryMod = ""
@@ -580,48 +562,36 @@ TitanBanStruct function GetTitanStructByName(string TitanName)
 
   switch(TitanName)
   {
-	  	case"ion" :
-	return titanArray[0]
-
-	case "scorch" :
-	return titanArray[1]
-
-	case "northstar":
+	  // it uses the Ui arrangement 
+	case"ion" :
 	return titanArray[2]
 
+	case "scorch" :
+	return titanArray[6]
+
+	case "northstar":
+	return titanArray[0]
+
 	case "ronin" :
-	return titanArray[3]
+	return titanArray[1]
 
 	case "tone" :
-	return titanArray[4]
+	return titanArray[3]
 
 	case "legion" :
-	return titanArray[5]
+	return titanArray[7]
 
 	case "vanguard" :
-	return titanArray[6] 
+	return titanArray[4] 
 
 	case "vanguardCores" :
-	return titanArray[7] 
+	return titanArray[5] 
 	}
 
-	print("Titan Name Out of Range")
+	print("Titan Name Out of Range returning fallback: 0 ")
 	return titanArray[0]
 }
 
-
-void function PrintTitanStruct(TitanBanStruct TitanBanStruct)
-{
-	print("-------------------------------------------- TitanBanStruct Print------------------")
-	print(TitanBanStruct.name)
-	print(TitanBanStruct.disabled)
-	print("----------------------------------------- Passives")
-	print(TitanBanStruct.passive1)
-	print(TitanBanStruct.passive2)
-	print(TitanBanStruct.passive3)
-	print("---------------------------------------------------------------------------------------")
-
-}
 
 BoostBanStruct function GetBoostStructById(var id)
 {
