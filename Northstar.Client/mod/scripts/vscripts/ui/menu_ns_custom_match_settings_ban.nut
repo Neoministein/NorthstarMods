@@ -468,7 +468,6 @@ void function changeWeaponDisplay( var pressedButton )
 
 void function loadWeaponCategory(Category category) 
 {
-  print("4")
   for(int i = 0; i < file.weapon.displays.len();i++) {
       if(i < category.loadouts.len()) {
 
