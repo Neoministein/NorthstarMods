@@ -1,6 +1,5 @@
 global function AddNorthstarCustomMatchSettingsBanMenu
 global function OnMenu_Open
-global function UpdateBanUI
 global function OpenBanMenu
 
 struct BoolAttributte {
@@ -227,6 +226,7 @@ void function clickOpenSubMenu(var pressedButton) {
 
 void function clickSelectInSubmenu(var pressedButton) 
 {
+  OnModSelectBGScreen_Activate(null)
   int modSelected = rearangeIntToButton(int(Hud_GetScriptID( pressedButton )))
 
   string uiType
@@ -253,8 +253,6 @@ void function clickSelectInSubmenu(var pressedButton)
   SendLoadoutChangesToServer(uiType, loadoutDisplay.categorySelected, loadoutDisplay.selectedLoadout, ParseLoadoutToDataString(loadout, loadoutDisplay.categorySelected)) 
 
   reloadActiveUI()
-  
-  OnModSelectBGScreen_Activate(null)
 }
 
 void function RestoreHiddenElemsOnMenuChange()
@@ -378,7 +376,7 @@ void function callChangeMainDisplay( var pressedButton )
 
 void function reloadCurrentScreen() 
 {
-  UpdateBanUI()
+  UpdateBanData()
   reloadActiveUI()
 }
 
@@ -460,7 +458,7 @@ void function changeWeaponDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.weapon.categorySelected) {
-    UpdateBanUI()
+    UpdateBanData()
     selectButton(file.weapon.buttons, file.weapon.categorySelected, selected)
     loadWeaponCategory(file.weapon.categories[selected])
     
@@ -515,7 +513,7 @@ void function changeTitanDisplay( var pressedButton )
 {
   int selected = int( Hud_GetScriptID( pressedButton ))
   if(selected != file.titan.categorySelected) {
-    UpdateBanUI()
+    UpdateBanData()
     selectButton(file.titan.buttons, file.titan.categorySelected, selected)
     loadTitanCategory(file.titan.categories[selected])
     
@@ -1748,7 +1746,7 @@ void function initBoost()
 ///Networking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void function UpdateBanUI() 
+void function UpdateBanData() 
 {
 	string data = ""
 	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_0", "") + ""
@@ -1756,8 +1754,6 @@ void function UpdateBanUI()
 	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_2", "") + ""
 
   importUIConfig(data)
-
-  reloadActiveUI()
 }
 
 void function sendPilotConfig() 

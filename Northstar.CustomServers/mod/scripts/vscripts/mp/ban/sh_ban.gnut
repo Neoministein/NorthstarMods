@@ -71,12 +71,10 @@ void function ImportData()
 	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_1", "") + ""
 	data += GetCurrentPlaylistVarOrUseValue("BAN_DATA_2", "") + ""
 
-	print(data)
 
 	array< string > importArray = parseImportData( data )
 
 	if(importArray.len() != 177) {
-		print("return")
     	return
   	}
 
@@ -133,7 +131,6 @@ void function ImportData()
 	foreach(BoostBanStruct boostStruct in file.boostArray) {
 		dataToStore += boostStruct.disabled ? "1" : "0"
 	}
-	print(dataToStore)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +145,6 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 		
 
 
-	print("Recive data")
 	if(args.len() == 0) 
 	{
 		return true
@@ -157,7 +153,6 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 
 	foreach(string changeData in args) 
 	{
-		print(changeData)
 		array<string> data = split(changeData ,"|")
 
 		if(data.len() < 3) {
@@ -166,7 +161,6 @@ bool function ClientCommandCallback_BanUiUpdateData( entity player, array<string
 
 		string typeToUpdate = data[0]
 
-		print("1:" + data[0])
 		switch(typeToUpdate) 
 		{
 			case "ability":
@@ -231,10 +225,8 @@ void function UpdateAbility(int index, string data)
 
 void function UpdateWeaponFromCategory(int category, int index, string data) 
 {
-	print("0")
 	switch(category) {
 		case 0:
-			print("1")
 			UpdateWeapon(index, data)
 			break
 		case 1:
@@ -294,7 +286,6 @@ void function UpdateWeapon(int index, string data)
 
 void function UpdateTitan(int index, string data) 
 {
-	print(data)
 	TitanBanStruct structToChange = file.titanArray[index]
 	array< string > dataAtr = parseImportData(data)
 
@@ -310,7 +301,6 @@ void function UpdateTitan(int index, string data)
 		structToChange.passive2 = GetMonarchCoreStringFromId(dataAtr[2], 1)
 		structToChange.passive3 = GetMonarchCoreStringFromId(dataAtr[3], 2)
 	}
-	print("A: " + structToChange.passive1 + " " + structToChange.passive2 + " " + structToChange.passive3)
 	
 }
 
